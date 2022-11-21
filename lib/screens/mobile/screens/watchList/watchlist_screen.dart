@@ -9,8 +9,9 @@ import 'package:provider/provider.dart';
 import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import 'package:http/http.dart' as http;
-
 import '../../../../constant/model/models.dart';
+import '../../../../constant/snackbar.dart';
+import '../../../../functions/user_detail.dart';
 import '../../../../themes/theme_model.dart';
 import '../screens.dart';
 
@@ -34,6 +35,7 @@ class WatchlistScreen extends StatefulWidget {
 class _WatchlistScreenState extends State<WatchlistScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final MySnackBars sb = MySnackBars();
   bool hideLogo = true;
   final List<Tab> mWLTabs = <Tab>[
     const Tab(text: 'WL 1'),
@@ -71,13 +73,13 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    return Consumer(builder: (context, ThemeModel themeNotifier, child) {
-      return WillPopScope(
-        onWillPop: () async {
-          Navigator.pop(context);
-          return true;
-        },
-        child: Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context);
+        return true;
+      },
+      child: Consumer(builder: (context, ThemeModel themeNotifier, child) {
+        return Scaffold(
           backgroundColor: themeNotifier.isDark ? Colors.black : Colors.white,
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -228,18 +230,15 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                 // }
 
                                 return InkWell(
-                                  onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
+                                  onTap: () => Navigator.of(context)
+                                      .push(MaterialPageRoute(
                                           builder: (context) => WatchListInfo(
-                                              exchange: WatchListModel
-                                                  .watchList[index]["exch"],
-                                              token: WatchListModel
-                                                  .watchList[index]["token"]
-                                              // symbolName: widget.watchlists[index].symbolName,
-                                              // exchange: widget.watchlists[index].exc,
-                                              // lTp: widget.watchlists[index].ltp,
-                                              // perChange: widget.watchlists[index].perChange,
-                                              // token: widget.watchlists[index].tokenValue,
+                                                exchange: WatchListModel
+                                                    .watchList[index]["exch"],
+                                                token: WatchListModel
+                                                    .watchList[index]["token"],
+                                                scriptName: WatchListModel
+                                                    .watchList[index]["tsym"],
                                               ))),
                                   onLongPress: () => Navigator.pushNamed(
                                       context, 'editWatchlist'),
@@ -364,32 +363,14 @@ class _WatchlistScreenState extends State<WatchlistScreen>
               ],
             ),
           ),
-        ),
-      );
-    });
+        );
+      }),
+    );
   }
 
   PopupMenuButton<int> popMenu(Size size) {
     return PopupMenuButton<int>(
       itemBuilder: (context) => [
-        // PopupMenuItem(
-        //   value: 1,
-        //   child: Row(
-        //     children: [
-        //       Icon(
-        //         hideLogo ? Icons.hide_image_outlined : Icons.image_outlined,
-        //         size: 18,
-        //       ),
-        //       const SizedBox(
-        //         width: 10,
-        //       ),
-        //       Text(
-        //         hideLogo ? "Hide Logo" : "Show Logo",
-        //         style: txtBtnTextStyle(size),
-        //       )
-        //     ],
-        //   ),
-        // ),
         PopupMenuItem(
           value: 1,
           child: Row(
@@ -426,42 +407,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
             ],
           ),
         ),
-        // PopupMenuItem(
-        //   value: 4,
-        //   child: Row(
-        //     children: [
-        //       const Icon(
-        //         Icons.price_change_outlined,
-        //         size: 20,
-        //       ),
-        //       const SizedBox(
-        //         width: 10,
-        //       ),
-        //       Text(
-        //         "LTP",
-        //         style: txtBtnTextStyle(size),
-        //       )
-        //     ],
-        //   ),
-        // ),
-        // PopupMenuItem(
-        //   value: 5,
-        //   child: Row(
-        //     children: [
-        //       const Icon(
-        //         Icons.percent_outlined,
-        //         size: 20,
-        //       ),
-        //       const SizedBox(
-        //         width: 10,
-        //       ),
-        //       Text(
-        //         "Percentage",
-        //         style: txtBtnTextStyle(size),
-        //       )
-        //     ],
-        //   ),
-        // ),
       ],
       offset: const Offset(0, 35),
       elevation: 2,
@@ -485,19 +430,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
             });
           });
         }
-        //else if (value == 4) {
-        //   setState(() {
-        //     widget.watchlists.sort((a, b) {
-        //       return a.ltp.compareTo(b.ltp);
-        //     });
-        //   });
-        // } else if (value == 5) {
-        //   setState(() {
-        //     widget.watchlists.sort((a, b) {
-        //       return a.perChange.compareTo(b.perChange);
-        //     });
-        //   });
-        // }
       },
     );
   }
@@ -513,10 +445,10 @@ class _WatchlistScreenState extends State<WatchlistScreen>
               '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
 
       Map mapRes = json.decode(response.body);
-      print(mapRes);
       if (mapRes['stat'] == "Ok") {
         setState(() {
           WatchListModel.watchList = mapRes["values"];
+          userDetail(context: context);
           log("${WatchListModel.watchList}");
         });
       } else {

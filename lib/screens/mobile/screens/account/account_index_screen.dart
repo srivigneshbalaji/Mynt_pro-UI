@@ -19,7 +19,7 @@ class _AccountScreenState extends State<AccountScreen>
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
-    userDetail(context: context);
+    // userDetail(context: context);
   }
 
   @override

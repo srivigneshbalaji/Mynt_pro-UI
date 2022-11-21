@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constant/text_style.dart';
 import '../util/sizer.dart';
 
 class CustomButton extends StatelessWidget {
@@ -71,6 +72,7 @@ class CustomOutlineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
     final BoxDecoration decoration = BoxDecoration(
         color: isSelected ?? false ? color : Colors.transparent,
         border: Border.all(
@@ -89,6 +91,7 @@ class CustomOutlineButton extends StatelessWidget {
           child: Center(
               child: Text(
             label,
+            style: listSubTitle(size),
           )
               // style:
               //     isSelected ?? false ? selectedTextStyle : normalTextStyle),

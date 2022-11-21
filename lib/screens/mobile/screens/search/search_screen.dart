@@ -18,13 +18,6 @@ class SearchScreen extends StatefulWidget {
 
   @override
   State<SearchScreen> createState() => _SearchScreenState(this.callFunction);
-  // static const String routeName = 'search';
-  // static Route route() {
-  //   return MaterialPageRoute(
-  //     settings: const RouteSettings(name: routeName),
-  //     builder: (_) => const SearchScreen(),
-  //   );
-  // }
 }
 
 List searchList = [];
@@ -44,15 +37,18 @@ class _SearchScreenState extends State<SearchScreen> {
     var size = MediaQuery.of(context).size;
     return WillPopScope(
       onWillPop: () async {
-        setState(() {
-          searchTxt.clear();
-          searchList.clear();
-          callFunction(WatchListModel.selectedIndex);
-        });
+        bachToWatchList();
         return true;
       },
       child: Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+                bachToWatchList();
+              },
+              icon: const Icon(Icons.arrow_back_ios),
+            ),
             title: TextField(
               cursorColor: Colors.black,
               autofocus: true,
@@ -144,6 +140,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     )
               : Container()),
     );
+  }
+
+  void bachToWatchList() {
+    return setState(() {
+      searchTxt.clear();
+      searchList.clear();
+      callFunction(WatchListModel.selectedIndex);
+    });
   }
 
   Future searchScript(searchText) async {
