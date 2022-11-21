@@ -1,20 +1,25 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:provider/provider.dart';
+import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import 'package:flutter_spinbox/cupertino.dart';
-
+import 'package:http/http.dart' as http;
+import '../../../../constant/model/models.dart';
 import '../../../../themes/theme_model.dart';
 
 class WatchListInfo extends StatefulWidget {
-  // String symbolName;
-  // String exchange;
-  // double lTp;
-  // double perChange;
-  // int token;
-  const WatchListInfo({
+  String exchange;
+  String token;
+
+  WatchListInfo({
     super.key,
+    required this.exchange,
+    required this.token,
     // required this.symbolName,
     // required this.exchange,
     // required this.lTp,
@@ -23,8 +28,7 @@ class WatchListInfo extends StatefulWidget {
   });
 
   @override
-  State<WatchListInfo> createState() => _WatchListInfoState(
-
+  State<WatchListInfo> createState() => _WatchListInfoState(exchange, token
       // symbolName, exchange, lTp, perChange, token
 
       );
@@ -39,14 +43,15 @@ class WatchListInfo extends StatefulWidget {
 }
 
 class _WatchListInfoState extends State<WatchListInfo> {
-  // String symbolName;
-  // String exchange;
-  // double lTp;
-  // double perChange;
-  // int token;
-  // _WatchListInfoState(
-  //     this.symbolName, this.exchange, this.lTp, this.perChange, this.token);
+  String exchange;
+  String token;
+  _WatchListInfoState(this.exchange, this.token);
   final flutterWebViewPlugin = FlutterWebviewPlugin();
+  @override
+  void initState() {
+    scriptInfo(exchange, token);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -241,5 +246,19 @@ class _WatchListInfoState extends State<WatchListInfo> {
         ),
       );
     });
+  }
+
+  Future scriptInfo(exchange, token) async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.getQuotes),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","exch":"$exchange","token":"$token"}&jKey=${ConstVariable.sessionId}''');
+
+      Map mapRes = json.decode(response.body);
+      log("$mapRes");
+    } catch (e) {}
   }
 }

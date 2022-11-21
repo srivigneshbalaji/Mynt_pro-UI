@@ -138,7 +138,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemCount: searchList.length)
                   : Center(
                       child: Text(
-                        eMsg,
+                        "No Results Found",
                         style: noDataTextStyle(size),
                       ),
                     )

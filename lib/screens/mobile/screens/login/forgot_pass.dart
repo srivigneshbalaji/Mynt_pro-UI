@@ -81,39 +81,13 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             ),
                           ),
                           sizedHeight(size * .2),
-                          buildText("Email Id", size),
-                          TextFormField(
-                            style: listTitle(size),
-                            controller: emailId,
-                            keyboardType: TextInputType.emailAddress,
-                            obscureText: passHidden,
-                            onChanged: (onChanged) {},
-                            validator: (emailValue) {
-                              if (emailValue!.isEmpty) {
-                                return "Please enter your e-mail !";
-                              } else if (!RegExp(
-                                      r"[a-z0-1!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-0!#$%$'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-]*[a-z0-9])?")
-                                  .hasMatch(emailValue)) {
-                                return "Invalid Email Address";
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              prefixIcon: const Icon(Icons.email),
-                              hintText: "EMAIL ID",
-                              hintStyle: listTitle(size),
-                            ),
-                          ),
-                          sizedHeight(size * .2),
-                          buildText("PAN No", size),
+                          buildText("PAN", size),
                           TextFormField(
                             inputFormatters: [UpperCaseTextFormatter()],
                             autofocus: true,
                             style: listTitle(size),
                             controller: panNum,
-                            keyboardType: TextInputType.text,
+                            keyboardType: TextInputType.number,
                             onChanged: (onChanged) {},
                             validator: (panValue) {
                               if (panValue!.isEmpty) {
@@ -126,6 +100,29 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                   borderRadius: BorderRadius.circular(5)),
                               prefixIcon: const Icon(Icons.numbers),
                               hintText: "PAN NO",
+                              counterText: '',
+                              hintStyle: listTitle(size),
+                            ),
+                          ),
+                          buildText("DOB", size),
+                          TextFormField(
+                            inputFormatters: [UpperCaseTextFormatter()],
+                            autofocus: true,
+                            style: listTitle(size),
+                            controller: panNum,
+                            keyboardType: TextInputType.number,
+                            onChanged: (onChanged) {},
+                            validator: (panValue) {
+                              if (panValue!.isEmpty) {
+                                return 'Please enter your Date of birth !';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5)),
+                              prefixIcon: const Icon(Icons.numbers),
+                              hintText: "DDMMYYYY",
                               counterText: '',
                               hintStyle: listTitle(size),
                             ),

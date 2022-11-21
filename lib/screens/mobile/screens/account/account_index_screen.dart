@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../functions/user_detail.dart';
 import '../../../../themes/theme_model.dart';
 import '../screens.dart';
 
@@ -18,6 +19,7 @@ class _AccountScreenState extends State<AccountScreen>
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
+    userDetail(context: context);
   }
 
   @override

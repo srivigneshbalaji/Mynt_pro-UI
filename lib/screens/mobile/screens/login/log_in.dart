@@ -1,23 +1,16 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:device_information/device_information.dart';
 import 'package:mynt_pro/constant/model/device_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import '../../../../constant/model/models.dart';
 import '../../../../constant/snackbar.dart';
 import '../../../../functions/quick_auth_func.dart';
 import '../../../../shared_widgets/custom_text_button.dart';
-import '../../../../shared_widgets/custom_text_form_field.dart';
 import '../../../../shared_widgets/custom_widget_button.dart';
 import '../../../../util/functions.dart';
 
@@ -135,7 +128,12 @@ class _LogInState extends State<LogIn> {
                             style: listTitle(size),
                             controller: userId,
                             keyboardType: TextInputType.text,
-                            onChanged: (onChanged) {},
+                            onChanged: (onChanged) {
+                              // final prefs =
+                              //     await SharedPreferences.getInstance();
+                              // onChanged = prefs.getString('userId')!;
+                              // ConstVariable.userId = onChanged;
+                            },
                             validator: (userValue) {
                               if (userValue!.isEmpty) {
                                 return 'Please enter your User Id !';
@@ -162,9 +160,9 @@ class _LogInState extends State<LogIn> {
                             validator: (passValue) {
                               if (passValue!.isEmpty) {
                                 return "Please enter the Password !";
-                              } else if (passValue.length < 4 ||
-                                  passValue.length > 10) {
-                                return "Password length is min 4 and max 10 !";
+                              } else if (passValue.length < 7 ||
+                                  passValue.length > 12) {
+                                return "Password length is min 7 and max 12 !";
                               }
                               return null;
                             },
@@ -191,13 +189,17 @@ class _LogInState extends State<LogIn> {
                           sizedHeight(size * .2),
                           buildText("PAN Number", size),
                           TextFormField(
-                            // inputFormatters: [UpperCaseTextFormatter()],
+                            maxLength: 10,
                             textCapitalization: TextCapitalization.characters,
                             style: listTitle(size),
                             controller: panNumber,
                             keyboardType: TextInputType.text,
                             obscureText: panHidden,
-                            onChanged: (onChanged) {},
+                            onChanged: (onChanged) {
+                              if (panNumber.text.length == 10) {
+                                FocusScope.of(context).unfocus();
+                              }
+                            },
                             validator: (panValue) {
                               if (panValue!.isEmpty) {
                                 return "Please enter your PAN number !";
@@ -220,6 +222,7 @@ class _LogInState extends State<LogIn> {
                                   });
                                 },
                               ),
+                              counterStyle: TextStyle(color: Colors.black),
                               hintText: "PAN NUMBER",
                               hintStyle: listTitle(size),
                             ),

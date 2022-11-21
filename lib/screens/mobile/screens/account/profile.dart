@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mynt_pro/constant/model/const_var.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../constant/constants.dart';
+import '../../../../constant/model/models.dart';
 import '../../../../functions/logout_func.dart';
+import '../../../../functions/user_detail.dart';
 
 class AccProfile extends StatefulWidget {
   const AccProfile({super.key});
@@ -13,6 +14,12 @@ class AccProfile extends StatefulWidget {
 }
 
 class _AccProfileState extends State<AccProfile> {
+  @override
+  void initState() {
+    userDetail(context: context);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -27,11 +34,11 @@ class _AccProfileState extends State<AccProfile> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "PREM KUMAR J",
+                  UserDetailModel.userName,
                   style: listTitle2(size),
                 ),
                 Text(
-                  "ZP00194",
+                  ConstVariable.userId,
                   style: listSubTitle(size),
                 )
               ],
@@ -59,7 +66,7 @@ class _AccProfileState extends State<AccProfile> {
                     style: profileTextStyle(size),
                   ),
                   Text(
-                    "PREM.JEYAVEL@GMAIL.COM",
+                    UserDetailModel.eMail,
                     style: profileTextStyle(size),
                   )
                 ],
@@ -72,7 +79,7 @@ class _AccProfileState extends State<AccProfile> {
                     style: profileTextStyle(size),
                   ),
                   Text(
-                    "9962573900",
+                    UserDetailModel.mobileNum,
                     style: profileTextStyle(size),
                   )
                 ],
@@ -90,19 +97,6 @@ class _AccProfileState extends State<AccProfile> {
                   )
                 ],
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Demat (BO)",
-                    style: profileTextStyle(size),
-                  ),
-                  Text(
-                    "*********5743",
-                    style: profileTextStyle(size),
-                  )
-                ],
-              )
             ],
           ),
         ),
@@ -142,26 +136,24 @@ class _AccProfileState extends State<AccProfile> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Segments",
+                    "Products",
                     style: profileTextStyle(size),
                   ),
-                  Text(
-                    "NSE, MCX",
-                    style: profileTextStyle(size),
-                  )
+                  Row(
+                    children: _buildSegment(size),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Products",
+                    "Segments",
                     style: profileTextStyle(size),
                   ),
-                  Text(
-                    "RML, MIS, CNO, CO",
-                    style: profileTextStyle(size),
-                  )
+                  Row(
+                    children: _buildProduct(size),
+                  ),
                 ],
               ),
             ],
@@ -237,5 +229,27 @@ class _AccProfileState extends State<AccProfile> {
         )
       ],
     );
+  }
+
+  List<Widget> _buildSegment(Size size) {
+    List<Widget> listText =
+        List.generate(UserDetailModel.segment.length, (index) {
+      return Text(
+        "${UserDetailModel.segment[index]},",
+        style: profileTextStyle(size),
+      );
+    });
+    return listText;
+  }
+
+  List<Widget> _buildProduct(Size size) {
+    List<Widget> listText =
+        List.generate(UserDetailModel.product.length, (index) {
+      return Text(
+        "${UserDetailModel.product[index]['s_prdt_ali']},",
+        style: profileTextStyle(size),
+      );
+    });
+    return listText;
   }
 }

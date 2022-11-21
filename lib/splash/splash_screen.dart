@@ -95,12 +95,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future initialRoute() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
     try {
       session = prefs.getString('userSession')!;
-      userId = prefs.getString('userId')!;
-
-      ConstVariable.authStatus = prefs.getBool('bioAuth')!;
+      ConstVariable.userId = prefs.getString('userId')!;
+      ConstVariable.sessionId = prefs.getString('userSession')!;
       log("SessionID ::$session");
+      ConstVariable.authStatus = prefs.getBool('bioAuth')!;
       Timer(const Duration(microseconds: 350), () {
         if (session.isEmpty) {
           Navigator.pushNamed(context, 'logIn');

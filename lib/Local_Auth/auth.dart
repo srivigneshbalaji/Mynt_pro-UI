@@ -21,6 +21,7 @@ class BiometricAuthService {
 //check biometric or devicelevel
   static Future<bool> checkDeviceAuthSupport() async {
     bool isSupport = await canCheckBiometrics() || await deviceLevelAuth();
+    // bool isSupport = await deviceLevelAuth();
     return isSupport;
   }
 

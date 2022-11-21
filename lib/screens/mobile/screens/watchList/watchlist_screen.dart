@@ -3,11 +3,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:loader_overlay/loader_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import 'package:http/http.dart' as http;
@@ -56,10 +54,12 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   }
 
   void _getActiveTabIndex() {
-    setState(() {
-      WatchListModel.selectedIndex = _tabController.index + 1;
-      marketWatchList(WatchListModel.selectedIndex);
-    });
+    if (mounted) {
+      setState(() {
+        WatchListModel.selectedIndex = _tabController.index + 1;
+        marketWatchList(WatchListModel.selectedIndex);
+      });
+    }
   }
 
   @override
@@ -165,6 +165,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                     ),
                   ),
                   child: TabBar(
+                      isScrollable: true,
                       labelStyle: tabBtnTextStyle(size),
                       unselectedLabelStyle: tabBtnTextStyle(size),
                       indicatorColor: Colors.blue,
@@ -209,15 +210,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                           : ListView.builder(
                               itemCount: WatchListModel.watchList.length,
                               itemBuilder: (context, index) {
-                                const String find = "-EQ";
-                                const String rePlace = "";
-                                var symbolName = (WatchListModel
-                                    .watchList[index]["tsym"]
-                                    .replaceAll(find, rePlace));
-                                // .cast<String, dynamic>();
-
-                                var tokenVal =
-                                    WatchListModel.watchList[index]["token"];
                                 // Future<bool> imageCircle(
                                 //     tokenVal, symName) async {
                                 //   var request = http.Request(
@@ -236,20 +228,25 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                 // }
 
                                 return InkWell(
-                                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => const WatchListInfo(
-                                          // symbolName: widget.watchlists[index].symbolName,
-                                          // exchange: widget.watchlists[index].exc,
-                                          // lTp: widget.watchlists[index].ltp,
-                                          // perChange: widget.watchlists[index].perChange,
-                                          // token: widget.watchlists[index].tokenValue,
-                                          ))),
+                                  onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (context) => WatchListInfo(
+                                              exchange: WatchListModel
+                                                  .watchList[index]["exch"],
+                                              token: WatchListModel
+                                                  .watchList[index]["token"]
+                                              // symbolName: widget.watchlists[index].symbolName,
+                                              // exchange: widget.watchlists[index].exc,
+                                              // lTp: widget.watchlists[index].ltp,
+                                              // perChange: widget.watchlists[index].perChange,
+                                              // token: widget.watchlists[index].tokenValue,
+                                              ))),
                                   onLongPress: () => Navigator.pushNamed(
                                       context, 'editWatchlist'),
                                   child: Container(
                                     margin: EdgeInsets.symmetric(
-                                        vertical: size.height * .0065),
-                                    height: size.height * .061,
+                                        vertical: size.height * .0012),
+                                    height: size.height * .062,
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.start,
@@ -266,7 +263,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                           child: Container(
                                             margin: hideLogo
                                                 ? const EdgeInsets.fromLTRB(
-                                                    10, 4.3, 0, 4.3)
+                                                    0, 4.3, 0, 4.3)
                                                 : const EdgeInsets.fromLTRB(
                                                     0, 4.6, 0, 4.6),
                                             child: Column(
@@ -506,32 +503,29 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   }
 
   Future marketWatchList(selectedIndex) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    print("${ConstVariable.sessionId}");
     try {
-      ConstVariable.sessionId = prefs.getString('userSession')!;
-      ConstVariable.userId = prefs.getString('userId')!;
-    } catch (e) {}
-    http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
+      http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
 
-    Map mapRes = json.decode(response.body);
-
-    print(mapRes);
-    if (mapRes['stat'] == "Ok") {
-      setState(() {
-        WatchListModel.watchList = mapRes["values"];
-        log("${WatchListModel.watchList}");
-      });
-    } else {
-      if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
-        Navigator.pushNamed(context, 'logIn');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(sb.unSuccessBar("Session Expired"));
+      Map mapRes = json.decode(response.body);
+      print(mapRes);
+      if (mapRes['stat'] == "Ok") {
+        setState(() {
+          WatchListModel.watchList = mapRes["values"];
+          log("${WatchListModel.watchList}");
+        });
+      } else {
+        if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
+          Navigator.pushNamed(context, 'logIn');
+          ScaffoldMessenger.of(context)
+              .showSnackBar(sb.unSuccessBar("Session Expired"));
+        }
       }
-    }
+    } catch (e) {}
   }
 }
