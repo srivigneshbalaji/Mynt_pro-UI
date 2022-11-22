@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../constant/constants.dart';
-import '../../../../constant/model/models.dart';
+import '../../../../model/models.dart';
 import '../../../../themes/theme_model.dart';
 
 class EditWatchList extends StatefulWidget {

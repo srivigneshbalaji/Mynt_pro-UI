@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:mynt_pro/constant/constants.dart';
-import 'package:mynt_pro/constant/model/watchlist_model.dart';
+import 'package:mynt_pro/model/watchlist_model.dart';
 import '../../../../api/api_links.dart';
-import '../../../../constant/model/const_var.dart';
+import '../../../../model/const_var.dart';
 import '../../../../constant/snackbar.dart';
 
 class SearchScreen extends StatefulWidget {

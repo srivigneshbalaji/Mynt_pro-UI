@@ -7,7 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Local_Auth/auth.dart';
-import '../constant/model/models.dart';
+import '../model/models.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

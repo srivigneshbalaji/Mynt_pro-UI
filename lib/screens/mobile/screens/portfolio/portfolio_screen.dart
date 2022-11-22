@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import '../../../../constant/constants.dart';
-import '../../../../constant/model/portfolio_model.dart';
+import '../../../../model/portfolio_model.dart';
 
 class PortfolioScreen extends StatelessWidget {
   final List<PortfolioModel> portfolios;

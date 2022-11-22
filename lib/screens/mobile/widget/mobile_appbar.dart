@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../constant/constants.dart';
-import '../../../constant/model/index_list_model.dart';
+import '../../../model/index_list_model.dart';
 import '../../../themes/theme_model.dart';
 
 class MobileAppBar extends StatelessWidget with PreferredSizeWidget {

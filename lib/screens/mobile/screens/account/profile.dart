@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../constant/constants.dart';
-import '../../../../constant/model/models.dart';
+import '../../../../model/models.dart';
 import '../../../../functions/logout_func.dart';
 import '../../../../functions/user_detail.dart';
 

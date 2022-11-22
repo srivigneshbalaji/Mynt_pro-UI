@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import 'package:http/http.dart' as http;
-import '../../../../constant/model/models.dart';
+import '../../../../model/models.dart';
 import '../../../../constant/snackbar.dart';
 import '../../../../functions/user_detail.dart';
 import '../../../../themes/theme_model.dart';

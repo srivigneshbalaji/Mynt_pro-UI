@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../api/api_links.dart';
-import '../constant/model/models.dart';
+import '../model/models.dart';
 import '../constant/snackbar.dart';
 
 final MySnackBars sb = MySnackBars();
