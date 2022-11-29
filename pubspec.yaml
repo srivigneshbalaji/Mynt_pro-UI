@@ -54,6 +54,7 @@ dependencies:
   shared_preferences: ^2.0.15
   flutter_screen_lock: ^9.0.0+1
   local_auth: ^2.1.2
+  web_socket_channel: ^2.2.0
   # imei_plugin: ^1.2.0
   # device_imei: ^0.0.2
 

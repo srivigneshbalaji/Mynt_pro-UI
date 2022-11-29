@@ -1,18 +1,22 @@
-// ignore_for_file: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages, use_build_context_synchronously
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:mynt_pro/screens/mobile/screens/watchList/watchlist_data.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import 'package:http/http.dart' as http;
+import '../../../../functions/user_detail.dart';
 import '../../../../model/models.dart';
 import '../../../../constant/snackbar.dart';
-import '../../../../functions/user_detail.dart';
+import '../../../../functions/client_detail.dart';
 import '../../../../themes/theme_model.dart';
+import '../../../../web_socket/web_sockts.dart';
 import '../screens.dart';
 
 class WatchlistScreen extends StatefulWidget {
@@ -32,6 +36,8 @@ class WatchlistScreen extends StatefulWidget {
   State<WatchlistScreen> createState() => _WatchlistScreenState();
 }
 
+List<Values>? data;
+
 class _WatchlistScreenState extends State<WatchlistScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -49,9 +55,10 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   void initState() {
     _tabController = TabController(length: mWLTabs.length, vsync: this);
     super.initState();
-    setState(() {
-      marketWatchList(1);
-    });
+
+    // marketWatchList(1);
+    closeSession();
+
     _tabController.addListener(_getActiveTabIndex);
   }
 
@@ -152,6 +159,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                 // ),
                 Container(
                   height: 45,
+                  width: size.width,
                   decoration: BoxDecoration(
                     // color: Colors.grey[300],
                     // borderRadius: BorderRadius.circular(
@@ -185,7 +193,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: mWLTabs.map((Tab tab) {
-                      return WatchListModel.watchList.isEmpty
+                      return WatchListModel.mWatchList.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -210,7 +218,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                               ),
                             )
                           : ListView.builder(
-                              itemCount: WatchListModel.watchList.length,
+                              itemCount: WatchListModel.mWatchList.length,
                               itemBuilder: (context, index) {
                                 // Future<bool> imageCircle(
                                 //     tokenVal, symName) async {
@@ -230,129 +238,46 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                 // }
 
                                 return InkWell(
-                                  onTap: () => Navigator.of(context)
-                                      .push(MaterialPageRoute(
-                                          builder: (context) => WatchListInfo(
-                                                exchange: WatchListModel
-                                                    .watchList[index]["exch"],
-                                                token: WatchListModel
-                                                    .watchList[index]["token"],
-                                                scriptName: WatchListModel
-                                                    .watchList[index]["tsym"],
-                                              ))),
+                                  onTap: () {
+                                    var exc = WatchListModel.mWatchList[index]
+                                            ["exch"]
+                                        .toString();
+                                    var token = WatchListModel.mWatchList[index]
+                                            ["token"]
+                                        .toString();
+                                    Map watchlistDepth = {
+                                      "exch": exc,
+                                      "token": token
+                                    };
+                                    WebSocketConnection.estcon(
+                                        "u", WatchListModel.mWatchList, true);
+                                    WebSocketConnection.estcon(
+                                        "d", watchlistDepth, false);
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                            builder: (context) => WatchListInfo(
+                                                  marketDepth: ConstVariable
+                                                      .mdpdata![index],
+                                                  exchange: WatchListModel
+                                                          .mWatchList[index]
+                                                      ["exch"],
+                                                )));
+                                  },
+
+                                  // => Navigator.of(context)
+                                  //     .push(MaterialPageRoute(
+                                  //         builder: (context) => WatchListInfo(
+                                  //               exchange: WatchListModel
+                                  //                   .mWatchList[index]["exch"],
+                                  //               token: WatchListModel
+                                  //                   .mWatchList[index]["token"],
+                                  //               scriptName: WatchListModel
+                                  //                   .mWatchList[index]["tsym"],
+                                  //             ))),
                                   onLongPress: () => Navigator.pushNamed(
                                       context, 'editWatchlist'),
-                                  child: Container(
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: size.height * .0012),
-                                    height: size.height * .062,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: [
-                                        // Visibility(
-                                        //   visible: hideLogo,
-                                        //   child: Column(
-                                        //     mainAxisAlignment: MainAxisAlignment.start,
-                                        //     crossAxisAlignment: CrossAxisAlignment.start,
-                                        //     children: [scriptLogo(imageCircle, tokenVal, symbolName, size)],
-                                        //   ),
-                                        // ),
-                                        Expanded(
-                                          child: Container(
-                                            margin: hideLogo
-                                                ? const EdgeInsets.fromLTRB(
-                                                    0, 4.3, 0, 4.3)
-                                                : const EdgeInsets.fromLTRB(
-                                                    0, 4.6, 0, 4.6),
-                                            child: Column(
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      WatchListModel
-                                                          .watchList[index]
-                                                              ["tsym"]
-                                                          .toString()
-                                                          .replaceAll(
-                                                              "-EQ", ""),
-                                                      style: listTitle(size),
-                                                    ),
-                                                    Text(
-                                                      WatchListModel
-                                                              .watchList[index]
-                                                          ["ti"],
-                                                      // style: widget.watchlists[index].ltp > 0
-                                                      //     ? ltpUpTextStyle(size)
-                                                      //     : ltpDownTextStyle(size),
-                                                    )
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      WatchListModel
-                                                              .watchList[index]
-                                                          ["exch"],
-                                                      style: listSubTitle(size),
-                                                    ),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                          color:
-                                                              // widget.watchlists[index].perChange > 0
-                                                              //     ?
-                                                              pcUpBackground(),
-                                                          // : pcDownBackground(),
-                                                          borderRadius:
-                                                              const BorderRadius
-                                                                      .all(
-                                                                  Radius
-                                                                      .circular(
-                                                                          12))),
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                    .fromLTRB(
-                                                                5.0, 1, 5, 3),
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Text(
-                                                              WatchListModel
-                                                                      .watchList[
-                                                                  index]["ls"],
-                                                              // style: widget.watchlists[index].perChange > 0
-                                                              //     ? pcUpTextStyle(size)
-                                                              //     : pcDownTextStyle(size),
-                                                            ),
-                                                            // widget.watchlists[index].perChange > 0
-                                                            //     ?
-                                                            SvgPicture.asset(
-                                                                "assets/arrowUp.svg")
-                                                            // : SvgPicture.asset("assets/arrowDown.svg"),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
+                                  child: WatchListData(
+                                    data: ConstVariable.data![index],
                                   ),
                                 );
                               },
@@ -419,13 +344,13 @@ class _WatchlistScreenState extends State<WatchlistScreen>
 
         if (value == 1) {
           setState(() {
-            WatchListModel.watchList.sort((a, b) {
+            WatchListModel.mWatchList.sort((a, b) {
               return a['tsym'].toLowerCase().compareTo(b['tsym'].toLowerCase());
             });
           });
         } else if (value == 2) {
           setState(() {
-            WatchListModel.watchList.sort((a, b) {
+            WatchListModel.mWatchList.sort((a, b) {
               return b['tsym'].toLowerCase().compareTo(a['tsym'].toLowerCase());
             });
           });
@@ -434,30 +359,96 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     );
   }
 
-  Future marketWatchList(selectedIndex) async {
-    print("${ConstVariable.sessionId}");
-    try {
-      http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
-          headers: <String, String>{
-            'Content-Type': 'application/json',
-          },
-          body:
-              '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
+  Future closeSession() async {
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request = http.Request('POST',
+        Uri.parse('http://154.83.3.25:8889/NorenWsHelper/InvalidateSess'));
+    request.bodyFields = {
+      'uid': ConstVariable.userId,
+      'usession': ConstVariable.sessionId,
+      'src': 'MOB'
+    };
+    request.headers.addAll(headers);
 
-      Map mapRes = json.decode(response.body);
-      if (mapRes['stat'] == "Ok") {
-        setState(() {
-          WatchListModel.watchList = mapRes["values"];
-          userDetail(context: context);
-          log("${WatchListModel.watchList}");
-        });
-      } else {
-        if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
-          Navigator.pushNamed(context, 'logIn');
-          ScaffoldMessenger.of(context)
-              .showSnackBar(sb.unSuccessBar("Session Expired"));
-        }
-      }
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      // print(await response.stream.bytesToString());
+      createSession();
+      marketWatchList(1);
+    } else {
+      // print(response.reasonPhrase);
+    }
+  }
+
+  Future createSession() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      ConstVariable.userId = prefs.getString('userId')!;
+      ConstVariable.sessionId = prefs.getString('userSession')!;
     } catch (e) {}
+    var bytes = utf8.encode(ConstVariable.sessionId);
+    final bytes1 = utf8.encode(sha256.convert(bytes).toString());
+    ConstVariable.sha556Session = sha256.convert(bytes1).toString();
+
+    print(ConstVariable.sha556Session);
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request = http.Request(
+        'POST', Uri.parse('http://154.83.3.25:8889/NorenWsHelper/CreateSess'));
+    request.bodyFields = {
+      'uid': ConstVariable.userId,
+      'usession': ConstVariable.sessionId,
+      'src': 'MOB',
+      'vcode': 'STONE_AGE'
+    };
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(await response.stream.bytesToString());
+    } else {
+      print(response.reasonPhrase);
+    }
+  }
+
+  Future marketWatchList(selectedIndex) async {
+    http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body:
+            '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
+
+    Map mapRes = json.decode(response.body);
+    if (mapRes['stat'] == "Ok") {
+      setState(() {
+        WatchListModel.mWatchList = mapRes["values"];
+        final resp = MarketWatchScrips.fromJson(
+            jsonDecode(response.body) as Map<String, dynamic>);
+        ConstVariable.data = resp.values;
+        final depthDesp = MarketDepthScrips.fromJson(
+            jsonDecode(response.body) as Map<String, dynamic>);
+        ConstVariable.mdpdata = depthDesp.mdpdata;
+        clientDetail(context: context);
+        userDetail(context: context);
+        log("MarkWatchList Data's :*: ${WatchListModel.mWatchList}");
+      });
+
+      setState(() {
+        if (WebSocketConnection.wsConnected == false) {
+          WebSocketConnection.estcon("t", WatchListModel.mWatchList, false);
+        } else {
+          WebSocketConnection.estcon("t", WatchListModel.mWatchList, true);
+        }
+      });
+    } else {
+      if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
+        Navigator.pushNamed(context, 'logIn');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.unSuccessBar("Session Expired"));
+      }
+    }
   }
 }

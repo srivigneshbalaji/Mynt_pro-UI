@@ -40,14 +40,16 @@ class QuickAuth {
       if (sts == "Ok") {
         ConstVariable.sessionId = mapRes['susertoken'];
         ConstVariable.userId = mapRes['uid'];
-
+        ConstVariable.accId = mapRes['actid'];
+        ConstVariable.brokerName = mapRes['brkname'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userSession', ConstVariable.sessionId);
         await prefs.setString('userId', ConstVariable.userId);
+        await prefs.setString('actid', ConstVariable.accId);
         ConstVariable.sessionId = prefs.getString('userSession')!;
-
-        print("---- ${ConstVariable.sessionId}");
         ConstVariable.userId = prefs.getString('userId')!;
+        ConstVariable.accId = prefs.getString('actid')!;
+
         // marketWatchList(context: context, selectedIndex: 1);
         Navigator.pushNamed(context, 'mobIndex');
         ScaffoldMessenger.of(context).showSnackBar(sb.successBar("Success"));

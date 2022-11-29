@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../constant/constants.dart';
+import '../../../../functions/user_detail.dart';
 import '../../../../model/models.dart';
 import '../../../../functions/logout_func.dart';
-import '../../../../functions/user_detail.dart';
+import '../../../../functions/client_detail.dart';
 
 class AccProfile extends StatefulWidget {
   const AccProfile({super.key});
@@ -16,6 +17,7 @@ class AccProfile extends StatefulWidget {
 class _AccProfileState extends State<AccProfile> {
   @override
   void initState() {
+    clientDetail(context: context);
     userDetail(context: context);
     super.initState();
   }
@@ -34,11 +36,11 @@ class _AccProfileState extends State<AccProfile> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  UserDetailModel.userName,
+                  ClientDetailModel.clientName,
                   style: listTitle2(size),
                 ),
                 Text(
-                  ConstVariable.userId,
+                  ClientDetailModel.accId,
                   style: listSubTitle(size),
                 )
               ],
@@ -66,7 +68,7 @@ class _AccProfileState extends State<AccProfile> {
                     style: profileTextStyle(size),
                   ),
                   Text(
-                    UserDetailModel.eMail,
+                    ClientDetailModel.eMail,
                     style: profileTextStyle(size),
                   )
                 ],
@@ -79,7 +81,7 @@ class _AccProfileState extends State<AccProfile> {
                     style: profileTextStyle(size),
                   ),
                   Text(
-                    UserDetailModel.mobileNum,
+                    ClientDetailModel.mobileNum,
                     style: profileTextStyle(size),
                   )
                 ],
@@ -92,7 +94,7 @@ class _AccProfileState extends State<AccProfile> {
                     style: profileTextStyle(size),
                   ),
                   Text(
-                    "***********998R",
+                    ClientDetailModel.pan,
                     style: profileTextStyle(size),
                   )
                 ],
@@ -123,20 +125,41 @@ class _AccProfileState extends State<AccProfile> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "HDFC Bank",
+                    "A/C Number",
                     style: profileTextStyle(size),
                   ),
-                  Text(
-                    "***********3847",
-                    style: profileTextStyle(size),
-                  )
+                  ClientDetailModel.bankDetail.isEmpty
+                      ? Text(
+                          "-- N/A --",
+                          style: profileTextStyle(size),
+                        )
+                      : Row(
+                          children: _buildBankAcc(size),
+                        )
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Products",
+                    "DP A/C Number",
+                    style: profileTextStyle(size),
+                  ),
+                  ClientDetailModel.dpAcctNum.isEmpty
+                      ? Text(
+                          "-- N/A --",
+                          style: profileTextStyle(size),
+                        )
+                      : Row(
+                          children: _buildDpAcc(size),
+                        )
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Segments",
                     style: profileTextStyle(size),
                   ),
                   Row(
@@ -148,7 +171,7 @@ class _AccProfileState extends State<AccProfile> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Segments",
+                    "Products",
                     style: profileTextStyle(size),
                   ),
                   Row(
@@ -233,9 +256,41 @@ class _AccProfileState extends State<AccProfile> {
 
   List<Widget> _buildSegment(Size size) {
     List<Widget> listText =
-        List.generate(UserDetailModel.segment.length, (index) {
+        List.generate(ClientDetailModel.segment.length, (index) {
       return Text(
-        "${UserDetailModel.segment[index]},",
+        "${ClientDetailModel.segment[index]},",
+        style: profileTextStyle(size),
+      );
+    });
+    return listText;
+  }
+
+  List<Widget> _buildBankAcc(Size size) {
+    List<Widget> listText =
+        List.generate(ClientDetailModel.bankDetail.length, (index) {
+      setState(() {
+        ClientDetailModel.bankDetail;
+      });
+      return Text(
+        ClientDetailModel.bankDetail.isEmpty
+            ? "N/A"
+            : "${ClientDetailModel.bankDetail[index]},",
+        style: profileTextStyle(size),
+      );
+    });
+    return listText;
+  }
+
+  List<Widget> _buildDpAcc(Size size) {
+    List<Widget> listText =
+        List.generate(ClientDetailModel.dpAcctNum.length, (index) {
+      setState(() {
+        ClientDetailModel.dpAcctNum;
+      });
+      return Text(
+        ClientDetailModel.dpAcctNum.isEmpty
+            ? "N/A"
+            : "${ClientDetailModel.dpAcctNum[index]},",
         style: profileTextStyle(size),
       );
     });

@@ -13,7 +13,7 @@ class WatchListModel extends ChangeNotifier {
   static bool onvisible = false;
   static int selectedIndex = 1;
   static String watchStat = "";
-  static List watchList = [];
+  static List mWatchList = [];
   static Icon actionIcon = const Icon(Icons.search);
   WatchListModel({
     required this.symbolName,

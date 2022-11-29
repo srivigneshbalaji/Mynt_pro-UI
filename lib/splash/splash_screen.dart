@@ -98,8 +98,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       session = prefs.getString('userSession')!;
-      ConstVariable.userId = prefs.getString('userId')!;
       ConstVariable.sessionId = prefs.getString('userSession')!;
+      ConstVariable.userId = prefs.getString('userId')!;
+      ConstVariable.accId = prefs.getString('actid')!;
       log("SessionID ::$session");
       ConstVariable.authStatus = prefs.getBool('bioAuth')!;
       Timer(const Duration(microseconds: 350), () {

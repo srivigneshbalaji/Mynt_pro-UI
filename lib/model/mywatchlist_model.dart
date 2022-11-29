@@ -8,11 +8,6 @@ class MyWatchList {
   final String ti;
   final String instname;
 
-  bool verifiedValue = false;
-  bool approvedValue = false;
-  bool securityApprovedValue = false;
-  bool blockedValue = false;
-
   MyWatchList({
     required this.exch,
     required this.token,

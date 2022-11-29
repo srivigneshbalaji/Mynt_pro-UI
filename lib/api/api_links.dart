@@ -8,6 +8,8 @@ class ApiLinks {
   static String addScrip = "$mainBaseURL/AddMultiScripsToMW";
   static String deleteScrip = "$mainBaseURL/DeleteMultiMWScrips";
   static String userDetail = "$mainBaseURL/UserDetails";
+  static String clientDetail = "$mainBaseURL/ClientDetails";
   static String changePass = "$mainBaseURL/Changepwd";
   static String getQuotes = "$mainBaseURL/GetQuotes";
+  static String orderBook = "$mainBaseURL/OrderBook";
 }

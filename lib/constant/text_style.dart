@@ -51,7 +51,7 @@ TextStyle ltpUpTextStyle(
     GoogleFonts.lexend(
       fontSize: size.height * 0.019,
       fontWeight: FontWeight.w500,
-      color: const Color(0xff01A04A),
+      // color: const Color(0xff01A04A),
     );
 TextStyle ltpDownTextStyle(
   Size size,

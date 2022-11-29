@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:mynt_pro/constant/constants.dart';
 import 'package:mynt_pro/model/watchlist_model.dart';
 import '../../../../api/api_links.dart';
-import '../../../../model/const_var.dart';
+import '../../../../constant/const_var.dart';
 import '../../../../constant/snackbar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -167,9 +167,9 @@ class _SearchScreenState extends State<SearchScreen> {
           searchList = mapRes['values'];
           isAddedScript = List<bool>.filled(searchList.length, false);
           for (var i = 0; i < searchList.length; i++) {
-            for (var j = 0; j < WatchListModel.watchList.length; j++) {
+            for (var j = 0; j < WatchListModel.mWatchList.length; j++) {
               if (searchList[i]['token'] ==
-                  WatchListModel.watchList[j]['token']) {
+                  WatchListModel.mWatchList[j]['token']) {
                 setState(() {
                   isAddedScript![i] = true;
                 });

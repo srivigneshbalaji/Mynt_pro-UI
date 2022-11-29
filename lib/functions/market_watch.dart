@@ -29,9 +29,9 @@ Future marketWatchList({
     Map mapRes = json.decode(response.body);
     WatchListModel.watchStat = mapRes['stat'];
     if (WatchListModel.watchStat == "Ok") {
-      WatchListModel.watchList = mapRes["values"];
+      WatchListModel.mWatchList = mapRes["values"];
 
-      log("${WatchListModel.watchList}");
+      log("${WatchListModel.mWatchList}");
     } else {
       if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
         Navigator.pushNamed(context, 'logIn');
