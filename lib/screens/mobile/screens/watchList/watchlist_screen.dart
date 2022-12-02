@@ -55,7 +55,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   void initState() {
     _tabController = TabController(length: mWLTabs.length, vsync: this);
     super.initState();
-
     // marketWatchList(1);
     closeSession();
 
@@ -142,7 +141,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                               context,
                               MaterialPageRoute(
                                   builder: (context) => SearchScreen(
-                                      callFunction: marketWatchList)),
+                                      fetchMWList: marketWatchList)),
                               (route) => true),
                           icon: const Icon(
                             Icons.search,
@@ -256,6 +255,9 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                     Navigator.of(context)
                                         .push(MaterialPageRoute(
                                             builder: (context) => WatchListInfo(
+                                                  scriptName: WatchListModel
+                                                          .mWatchList[index]
+                                                      ["tsym"],
                                                   marketDepth: ConstVariable
                                                       .mdpdata![index],
                                                   exchange: WatchListModel

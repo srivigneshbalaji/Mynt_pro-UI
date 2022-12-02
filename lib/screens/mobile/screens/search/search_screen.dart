@@ -13,11 +13,11 @@ import '../../../../constant/const_var.dart';
 import '../../../../constant/snackbar.dart';
 
 class SearchScreen extends StatefulWidget {
-  final Function callFunction;
-  const SearchScreen({super.key, required this.callFunction});
+  final Function fetchMWList;
+  const SearchScreen({super.key, required this.fetchMWList});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState(this.callFunction);
+  State<SearchScreen> createState() => _SearchScreenState(this.fetchMWList);
 }
 
 List searchList = [];
@@ -29,8 +29,8 @@ final MySnackBars sb = MySnackBars();
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController searchTxt = TextEditingController();
-  final Function callFunction;
-  _SearchScreenState(this.callFunction);
+  final Function fetchMWList;
+  _SearchScreenState(this.fetchMWList);
 
   @override
   Widget build(BuildContext context) {
@@ -116,12 +116,12 @@ class _SearchScreenState extends State<SearchScreen> {
                                   deleteScript(searchList[index]['exch'],
                                       searchList[index]['token']);
                                   isAddedScript![index] = false;
-                                  callFunction(WatchListModel.selectedIndex);
+                                  fetchMWList(WatchListModel.selectedIndex);
                                 } else {
                                   addScript(searchList[index]['exch'],
                                       searchList[index]['token']);
                                   isAddedScript![index] = true;
-                                  callFunction(WatchListModel.selectedIndex);
+                                  fetchMWList(WatchListModel.selectedIndex);
                                 }
                               });
                             },
@@ -146,7 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return setState(() {
       searchTxt.clear();
       searchList.clear();
-      callFunction(WatchListModel.selectedIndex);
+      fetchMWList(WatchListModel.selectedIndex);
     });
   }
 

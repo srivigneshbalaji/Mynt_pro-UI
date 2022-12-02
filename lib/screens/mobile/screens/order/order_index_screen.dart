@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:http/http.dart' as http;
+import '../../../../api/api_links.dart';
+import '../../../../constant/const_var.dart';
 import '../../../../constant/constants.dart';
+import '../../../../model/order_book_model.dart';
 import '../../../../themes/theme_model.dart';
 import '../screens.dart';
 import 'pending_order.dart';
@@ -19,9 +25,16 @@ class _OrderScreenState extends State<OrderScreen>
 
   @override
   void initState() {
+    orderBook();
+
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
+    tradeBook();
   }
+
+  // void _getActiveTabIndex() {
+  //   executedOrderBook();
+  // }
 
   @override
   void dispose() {
@@ -60,7 +73,6 @@ class _OrderScreenState extends State<OrderScreen>
                 indicatorColor: Colors.blue,
                 controller: _tabController,
                 labelColor: Colors.blue,
-                onTap: ((value) {}),
                 unselectedLabelColor:
                     themeNotifier.isDark ? Colors.white : Colors.black,
                 tabs: const [
@@ -91,5 +103,52 @@ class _OrderScreenState extends State<OrderScreen>
         ),
       );
     });
+  }
+
+  Future orderBook() async {
+    http.Response response = await http.post(Uri.parse(ApiLinks.orderBook),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body:
+            '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
+
+    var mapRes = json.decode(response.body);
+    String stat = mapRes[0]['stat'];
+
+    if (stat == "Ok") {
+      setState(() {
+        OrderBookModel.orderBook = json.decode(response.body);
+        OrderBookModel.executedOrderBook = [];
+        OrderBookModel.pendingOrderBook = [];
+        for (var i = 0; i < OrderBookModel.orderBook.length; i++) {
+          if (OrderBookModel.orderBook[i]['status'] == "REJECTED" ||
+              OrderBookModel.orderBook[i]['status'] == "CANCELED" ||
+              OrderBookModel.orderBook[i]['status'] == "COMPLETE" ||
+              OrderBookModel.orderBook[i]['status'] == "INVALID_STATUS_TYPE") {
+            OrderBookModel.executedOrderBook.add(OrderBookModel.orderBook[i]);
+
+            log("EXCORD ${OrderBookModel.executedOrderBook}");
+          } else {
+            OrderBookModel.pendingOrderBook.add(OrderBookModel.orderBook[i]);
+            log("${OrderBookModel.pendingOrderBook}");
+          }
+        }
+      });
+    }
+  }
+
+  Future tradeBook() async {
+    http.Response response = await http.post(Uri.parse(ApiLinks.tradeBook),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body:
+            '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}"}&jKey=${ConstVariable.sessionId}''');
+
+    var mapRes = json.decode(response.body);
+    String stat = mapRes['stat'];
+
+    print("Trade-Book :: ${mapRes}");
   }
 }

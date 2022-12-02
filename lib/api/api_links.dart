@@ -12,4 +12,7 @@ class ApiLinks {
   static String changePass = "$mainBaseURL/Changepwd";
   static String getQuotes = "$mainBaseURL/GetQuotes";
   static String orderBook = "$mainBaseURL/OrderBook";
+  static String positionBook = "$mainBaseURL/PositionBook";
+  static String holdings = "$mainBaseURL/Holdings";
+  static String tradeBook = "$mainBaseURL/TradeBook";
 }

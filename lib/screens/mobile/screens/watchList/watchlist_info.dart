@@ -1,45 +1,41 @@
-// ignore_for_file: depend_on_referenced_packages
-
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:mynt_pro/web_socket/market_depth.dart';
 import 'package:mynt_pro/web_socket/websocket_connection.dart';
 import 'package:provider/provider.dart';
-import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
-import 'package:http/http.dart' as http;
 import '../../../../model/models.dart';
 import '../../../../constant/snackbar.dart';
-import '../../../../shared_widgets/custom_button.dart';
 import '../../../../themes/theme_model.dart';
 import '../../../../web_socket/depth_response.dart';
 import '../../../../web_socket/depth_ws_ack.dart';
+import '../order/orders.dart';
 
 class WatchListInfo extends StatefulWidget {
   final MarketDepth marketDepth;
   String exchange;
-
+  String scriptName;
   WatchListInfo({
     super.key,
     required this.exchange,
     required this.marketDepth,
+    required this.scriptName,
   });
 
   @override
   State<WatchListInfo> createState() =>
-      _WatchListInfoState(exchange, this.marketDepth);
+      _WatchListInfoState(exchange, marketDepth, scriptName);
 }
 
 class _WatchListInfoState extends State<WatchListInfo> {
   String exchange;
   final MarketDepth marketDepth;
+  String scriptName;
   bool isDepth = true;
   bool isChart = false;
 
-  _WatchListInfoState(this.exchange, this.marketDepth);
+  _WatchListInfoState(this.exchange, this.marketDepth, this.scriptName);
   final flutterWebViewPlugin = FlutterWebviewPlugin();
 
   bool buyActive = false;
@@ -83,7 +79,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
               icon: const Icon(Icons.arrow_back_ios),
             ),
             title: Text(
-              ScriptInfoModel.scriptName,
+              scriptName,
               style: depthSymbolNameTextStyle(size),
             ),
           ),
@@ -91,36 +87,33 @@ class _WatchListInfoState extends State<WatchListInfo> {
             child: SizedBox(
               height: 70,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   SizedBox(
-                    width: 200,
-                    child: CustomOutlineButton(
-                      isSelected: buyActive,
-                      onPress: () {
-                        setState(() {
-                          buyActive = true;
-                          sellActive = false;
-                        });
-                      },
-                      label: 'Buy',
-                      color: Colors.black,
-                    ),
-                  ),
+                      width: 150,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue),
+                        child: Text("BUY"),
+                        onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (context) => BuyOrder(
+                                    scriptName: scriptName, exch: exchange))),
+                      )),
                   SizedBox(
-                    width: 200,
-                    child: CustomOutlineButton(
-                      isSelected: sellActive,
-                      onPress: () {
-                        setState(() {
-                          buyActive = false;
-                          sellActive = true;
-                        });
-                      },
-                      label: 'Sell',
-                      color: Colors.black,
-                    ),
-                  )
+                      width: 150,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red),
+                        child: Text("SELL"),
+                        onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (context) => SellOrder(
+                                    scriptName: scriptName, exch: exchange))),
+                      ))
                 ],
               ),
             ),

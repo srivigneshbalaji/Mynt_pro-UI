@@ -84,7 +84,7 @@ class CustomOutlineButton extends StatelessWidget {
     return InkWell(
       onTap: loading == true ? () {} : () => onPress(),
       child: Container(
-        height: 48,
+        height: 40,
         decoration: decoration,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),

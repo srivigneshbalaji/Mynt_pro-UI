@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../constant/constants.dart';
 import '../../../../constant/snackbar.dart';
-import '../../../../functions/cange_pass.dart';
+import '../../../../functions/change_pass.dart';
 import '../../../../shared_widgets/custom_widget_button.dart';
 
 class ChangePassword extends StatefulWidget {

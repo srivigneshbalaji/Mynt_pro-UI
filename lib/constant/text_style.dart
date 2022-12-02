@@ -220,3 +220,17 @@ TextStyle logInText(
       fontSize: size.height * 0.025,
       fontWeight: FontWeight.w400,
     );
+TextStyle orderBtnText(
+  Size size,
+) =>
+    GoogleFonts.lexend(
+      fontSize: size.height * .015,
+      fontWeight: FontWeight.w400,
+    );
+TextStyle orderContentText(
+  Size size,
+) =>
+    GoogleFonts.lexend(
+      fontSize: size.height * 0.017,
+      fontWeight: FontWeight.w400,
+    );

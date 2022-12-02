@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:bubble_bottom_bar/bubble_bottom_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../model/index_list_model.dart';
-import '../../model/portfolio_model.dart';
+import '../../model/watchlist_model.dart';
 import '../../themes/theme_model.dart';
+import '../../web_socket/web_sockts.dart';
 import 'screens/screens.dart';
 import 'widget/widgets.dart';
 
@@ -37,15 +38,16 @@ class _MobileIndexState extends State<MobileIndex> {
   void changePage(int? index) {
     setState(() {
       currentIndex = index!;
+      if (currentIndex == 1 || currentIndex == 2 || currentIndex == 3) {
+        WebSocketConnection.estcon("u", WatchListModel.mWatchList, true);
+      }
     });
   }
 
   List<Widget> tabItems = [
     WatchlistScreen(),
     OrderScreen(),
-    PortfolioScreen(
-      portfolios: PortfolioModel.portfolioDatas,
-    ),
+    PortfolioScreen(),
     AccountScreen(),
   ];
   @override
