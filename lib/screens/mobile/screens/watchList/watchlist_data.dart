@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mynt_pro/model/models.dart';
 import 'package:mynt_pro/web_socket/web_sockts.dart';
 
 import '../../../../constant/text_style.dart';
 
 class WatchListData extends StatelessWidget {
   final Values data;
-  WatchListData({
-    Key? key,
-    required this.data,
-  }) : super(key: key);
+  WatchListData({Key? key, required this.data}) : super(key: key);
 
   String stockName = "";
   var pChange;
-
   var che;
 
   @override
@@ -25,6 +22,11 @@ class WatchListData extends StatelessWidget {
         builder: (_,
             AsyncSnapshot<TouchlineAcknowledgementStream>
                 snapshotAcknowledgement) {
+          if (snapshotAcknowledgement.data == null) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
           data.change = "0.00";
           data.perChange = "0.00";
           data.open = "0.00";
@@ -32,89 +34,45 @@ class WatchListData extends StatelessWidget {
           data.ltp = "0.00";
           che = 0;
           pChange = 0;
-          if (snapshotAcknowledgement.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (snapshotAcknowledgement.connectionState ==
-                  ConnectionState.active &&
-              snapshotAcknowledgement.hasData) {
-            if (snapshotAcknowledgement.data!.tk == data.token) {
-              data.symbolname = snapshotAcknowledgement.data!.ts == null ||
-                      snapshotAcknowledgement.data!.ts! == 'null'
-                  ? data.symbolname
-                  : snapshotAcknowledgement.data!.ts!;
-              data.exc = snapshotAcknowledgement.data!.e == null ||
-                      snapshotAcknowledgement.data!.e! == 'null'
-                  ? data.exc
-                  : snapshotAcknowledgement.data!.e!;
-              data.close = snapshotAcknowledgement.data!.c == null ||
-                      snapshotAcknowledgement.data!.c! == 'null'
-                  ? data.close
-                  : snapshotAcknowledgement.data!.c!;
 
-              data.ltp = snapshotAcknowledgement.data!.lp == null ||
-                      snapshotAcknowledgement.data!.lp! == 'null'
-                  ? data.ltp
-                  : snapshotAcknowledgement.data!.lp!;
-              data.perChange = snapshotAcknowledgement.data!.pc == null ||
-                      snapshotAcknowledgement.data!.pc! == 'null'
-                  ? data.perChange
-                  : snapshotAcknowledgement.data!.pc!;
-              data.change = data.change == null || data.change == "null"
-                  ? data.change
-                  : (double.parse(data.ltp!) - double.parse(data.close!))
-                      .toStringAsFixed(2);
-              pChange = num.tryParse("${data.perChange}")?.toDouble();
+          if (snapshotAcknowledgement.data!.tk == data.token) {
+            data.symbolname = snapshotAcknowledgement.data!.ts == null ||
+                    snapshotAcknowledgement.data!.ts! == 'null'
+                ? data.symbolname
+                : snapshotAcknowledgement.data!.ts!;
+            data.exc = snapshotAcknowledgement.data!.e == null ||
+                    snapshotAcknowledgement.data!.e! == 'null'
+                ? data.exc
+                : snapshotAcknowledgement.data!.e!;
+            data.close = snapshotAcknowledgement.data!.c == null ||
+                    snapshotAcknowledgement.data!.c! == 'null'
+                ? data.close
+                : snapshotAcknowledgement.data!.c!;
 
-              che = num.tryParse("${data.change}")?.toDouble();
-              // const String find = "-EQ";
-              // const String rePlace = "";
-              // stockName = (data.symbolname!.replaceAll(find, rePlace));
+            data.ltp = snapshotAcknowledgement.data!.lp == null ||
+                    snapshotAcknowledgement.data!.lp! == 'null'
+                ? data.ltp
+                : snapshotAcknowledgement.data!.lp!;
+
+            data.perChange = snapshotAcknowledgement.data!.pc == null ||
+                    snapshotAcknowledgement.data!.pc! == 'null'
+                ? data.perChange
+                : snapshotAcknowledgement.data!.pc!;
+            data.change = data.change == null || data.change == "null"
+                ? data.change
+                : (double.parse(data.ltp!) - double.parse(data.close!))
+                    .toStringAsFixed(2);
+            for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+              if (WatchListModel.mWatchList[i]["token"] == "${data.token}") {
+                WatchListModel.mWatchList[i]['ltp'] = double.parse(data.ltp!);
+                WatchListModel.mWatchList[i]['perChange'] =
+                    double.parse(data.perChange!);
+              }
             }
+            pChange = num.tryParse("${data.perChange}")?.toDouble();
+
+            che = num.tryParse("${data.change}")?.toDouble();
           }
-          // if (snapshotAcknowledgement.data == null) {
-          //   return Container();
-          // }
-          // if (snapshotAcknowledgement.data != null) {
-          //   if (snapshotAcknowledgement.data!.tk == data.token) {
-          //     data.symbolname = snapshotAcknowledgement.data!.ts == null ||
-          //             snapshotAcknowledgement.data!.ts! == 'null'
-          //         ? data.symbolname
-          //         : snapshotAcknowledgement.data!.ts!;
-          //     data.exc = snapshotAcknowledgement.data!.e == null ||
-          //             snapshotAcknowledgement.data!.e! == 'null'
-          //         ? data.exc
-          //         : snapshotAcknowledgement.data!.e!;
-          //     data.close = snapshotAcknowledgement.data!.c == null ||
-          //             snapshotAcknowledgement.data!.c! == 'null'
-          //         ? data.close
-          //         : snapshotAcknowledgement.data!.c!;
-
-          //     data.ltp = snapshotAcknowledgement.data!.lp == null ||
-          //             snapshotAcknowledgement.data!.lp! == 'null'
-          //         ? data.ltp
-          //         : snapshotAcknowledgement.data!.lp!;
-          //     data.perChange = snapshotAcknowledgement.data!.pc == null ||
-          //             snapshotAcknowledgement.data!.pc! == 'null'
-          //         ? data.perChange
-          //         : snapshotAcknowledgement.data!.pc!;
-          //     data.change = data.change == null || data.change == "null"
-          //         ? data.change
-          //         : (double.parse(data.ltp!) - double.parse(data.close!))
-          //             .toStringAsFixed(2);
-          //     pChange = num.tryParse("${data.perChange}")?.toDouble();
-
-          //     che = num.tryParse("${data.change}")?.toDouble();
-          //     final String find = "-EQ";
-          //     final String rePlace = "";
-          //     stockName = (data.symbolname!.replaceAll(find, rePlace));
-          //   } else {
-          //     return Container();
-          //   }
-          // }
 
           return StreamBuilder(
             stream: WebSocketConnection.mwStream.stream
@@ -135,6 +93,16 @@ class WatchListData extends StatelessWidget {
                       snapshot.data!.c == null || snapshot.data!.c! == 'null'
                           ? data.close
                           : snapshot.data!.c!;
+
+                  for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+                    if (WatchListModel.mWatchList[i]["token"] ==
+                        "${data.token}") {
+                      WatchListModel.mWatchList[i]['ltp'] =
+                          double.parse(data.ltp!);
+                      WatchListModel.mWatchList[i]['perChange'] =
+                          double.parse(data.perChange!);
+                    }
+                  }
                   data.change = data.change == null ||
                           data.change == "0.00" ||
                           data.change == "00.00"

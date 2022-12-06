@@ -17,7 +17,15 @@ import '../../../../constant/snackbar.dart';
 import '../../../../functions/client_detail.dart';
 import '../../../../themes/theme_model.dart';
 import '../../../../web_socket/web_sockts.dart';
+
 import '../screens.dart';
+
+enum Options {
+  symbolAsc,
+  symbolDesc,
+  ltp,
+  perChange,
+}
 
 class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({
@@ -42,7 +50,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final MySnackBars sb = MySnackBars();
-  bool hideLogo = true;
   final List<Tab> mWLTabs = <Tab>[
     const Tab(text: 'WL 1'),
     const Tab(text: 'WL 2'),
@@ -50,12 +57,11 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     const Tab(text: 'WL 4'),
     const Tab(text: 'WL 5'),
   ];
-
+  var popupMenuItemIndex = 0;
   @override
   void initState() {
     _tabController = TabController(length: mWLTabs.length, vsync: this);
     super.initState();
-    // marketWatchList(1);
     closeSession();
 
     _tabController.addListener(_getActiveTabIndex);
@@ -75,6 +81,13 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     super.dispose();
     _tabController.dispose();
   }
+
+  String addExchange = "";
+  String addToken = "";
+  String addScripts = "";
+  String delExchange = "";
+  String delToken = "";
+  String delScripts = "";
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +161,25 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                             color: Color(0xff7B7B7B),
                           ),
                         ),
-                        popMenu(size),
+                        PopupMenuButton(
+                          onSelected: (value) {
+                            _onMenuItemSelected(value as int);
+                          },
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(8.0)),
+                          ),
+                          itemBuilder: (ctx) => [
+                            _buildPopupMenuItem('SYMBOL ASC', Icons.search,
+                                Options.symbolAsc.index, size),
+                            _buildPopupMenuItem('SYMBOL DESC', Icons.search,
+                                Options.symbolDesc.index, size),
+                            _buildPopupMenuItem(
+                                'LTP', Icons.abc, Options.ltp.index, size),
+                            _buildPopupMenuItem('PER.CHANGE', Icons.abc,
+                                Options.perChange.index, size),
+                          ],
+                        )
                       ],
                     )
                   ],
@@ -203,7 +234,14 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                   ),
                                   TextButton.icon(
                                       onPressed: () {
-                                        Navigator.pushNamed(context, 'search');
+                                        Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SearchScreen(
+                                                        fetchMWList:
+                                                            marketWatchList)),
+                                            (route) => true);
                                       },
                                       icon: const Icon(
                                         Icons.add_box_outlined,
@@ -216,27 +254,12 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                 ],
                               ),
                             )
-                          : ListView.builder(
+                          : ReorderableListView.builder(
                               itemCount: WatchListModel.mWatchList.length,
                               itemBuilder: (context, index) {
-                                // Future<bool> imageCircle(
-                                //     tokenVal, symName) async {
-                                //   var request = http.Request(
-                                //       'GET',
-                                //       Uri.parse(
-                                //           'https://besim.zebull.in/static/equity/icons/${tokenVal}_$symbolName.webp'));
-
-                                //   http.StreamedResponse response =
-                                //       await request.send();
-
-                                //   if (response.statusCode == 200) {
-                                //     return true;
-                                //   } else {
-                                //     return false;
-                                //   }
-                                // }
-
                                 return InkWell(
+                                  key: ValueKey(
+                                      WatchListModel.mWatchList[index]),
                                   onTap: () {
                                     var exc = WatchListModel.mWatchList[index]
                                             ["exch"]
@@ -265,23 +288,49 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                                       ["exch"],
                                                 )));
                                   },
-
-                                  // => Navigator.of(context)
-                                  //     .push(MaterialPageRoute(
-                                  //         builder: (context) => WatchListInfo(
-                                  //               exchange: WatchListModel
-                                  //                   .mWatchList[index]["exch"],
-                                  //               token: WatchListModel
-                                  //                   .mWatchList[index]["token"],
-                                  //               scriptName: WatchListModel
-                                  //                   .mWatchList[index]["tsym"],
-                                  //             ))),
-                                  onLongPress: () => Navigator.pushNamed(
-                                      context, 'editWatchlist'),
                                   child: WatchListData(
-                                    data: ConstVariable.data![index],
-                                  ),
+                                      data: ConstVariable.data![index]),
                                 );
+                              },
+                              onReorder: (int oldIndex, int newIndex) {
+                                delScripts = "";
+                                for (var i = 0;
+                                    i < WatchListModel.mWatchList.length;
+                                    i++) {
+                                  setState(() {
+                                    delExchange =
+                                        WatchListModel.mWatchList[i]['exch'];
+                                    delToken =
+                                        WatchListModel.mWatchList[i]['token'];
+
+                                    delScripts += "$delExchange|$delToken#";
+                                  });
+                                }
+
+                                setState(() {
+                                  if (newIndex > oldIndex) {
+                                    newIndex = newIndex - 1;
+                                  }
+
+                                  final element = WatchListModel.mWatchList
+                                      .removeAt(oldIndex);
+                                  WatchListModel.mWatchList
+                                      .insert(newIndex, element);
+                                });
+                                log("AFTER REORDER ::: ${WatchListModel.mWatchList}");
+                                addScripts = "";
+                                for (var i = 0;
+                                    i < WatchListModel.mWatchList.length;
+                                    i++) {
+                                  setState(() {
+                                    addExchange =
+                                        WatchListModel.mWatchList[i]['exch'];
+                                    addToken =
+                                        WatchListModel.mWatchList[i]['token'];
+                                    addScripts += "$addExchange|$addToken#";
+                                  });
+                                }
+                                deleteScript(delScripts);
                               },
                             );
                     }).toList(),
@@ -295,70 +344,92 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     );
   }
 
-  PopupMenuButton<int> popMenu(Size size) {
-    return PopupMenuButton<int>(
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 1,
-          child: Row(
-            children: [
-              const Icon(
-                Icons.sort_by_alpha,
-                size: 20,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              Text(
-                "A ⇒ Z",
-                style: txtBtnTextStyle(size),
-              )
-            ],
+  PopupMenuItem _buildPopupMenuItem(
+      String title, IconData iconData, int position, Size size) {
+    return PopupMenuItem(
+      value: position,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(
+            iconData,
+            color: Colors.black,
           ),
-        ),
-        PopupMenuItem(
-          value: 2,
-          child: Row(
-            children: [
-              const Icon(
-                Icons.sort_by_alpha,
-                size: 20,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              Text(
-                "Z ⇒ A",
-                style: txtBtnTextStyle(size),
-              )
-            ],
+          SizedBox(
+            width: 10,
           ),
-        ),
-      ],
-      offset: const Offset(0, 35),
-      elevation: 2,
-      onSelected: (value) {
-        // if (value == 1) {
-        //   setState(() {
-        //     hideLogo = !hideLogo;
-        //   });
-        // } else
-
-        if (value == 1) {
-          setState(() {
-            WatchListModel.mWatchList.sort((a, b) {
-              return a['tsym'].toLowerCase().compareTo(b['tsym'].toLowerCase());
-            });
-          });
-        } else if (value == 2) {
-          setState(() {
-            WatchListModel.mWatchList.sort((a, b) {
-              return b['tsym'].toLowerCase().compareTo(a['tsym'].toLowerCase());
-            });
-          });
-        }
-      },
+          Text(
+            title,
+            style: txtBtnTextStyle(size),
+          ),
+        ],
+      ),
     );
+  }
+
+  _onMenuItemSelected(int value) {
+    setState(() {
+      popupMenuItemIndex = value;
+    });
+    delScripts = "";
+    for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+      setState(() {
+        delExchange = WatchListModel.mWatchList[i]['exch'];
+        delToken = WatchListModel.mWatchList[i]['token'];
+
+        delScripts += "$delExchange|$delToken#";
+      });
+    }
+    deleteScript(delScripts);
+    if (value == Options.symbolAsc.index) {
+      WatchListModel.mWatchList.sort((a, b) {
+        return a['tsym'].toLowerCase().compareTo(b['tsym'].toLowerCase());
+      });
+      addScripts = "";
+      for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+        setState(() {
+          addExchange = WatchListModel.mWatchList[i]['exch'];
+          addToken = WatchListModel.mWatchList[i]['token'];
+          addScripts += "$addExchange|$addToken#";
+        });
+      }
+    } else if (value == Options.symbolDesc.index) {
+      WatchListModel.mWatchList.sort((a, b) {
+        return b['tsym'].toLowerCase().compareTo(a['tsym'].toLowerCase());
+      });
+      addScripts = "";
+      for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+        setState(() {
+          addExchange = WatchListModel.mWatchList[i]['exch'];
+          addToken = WatchListModel.mWatchList[i]['token'];
+          addScripts += "$addExchange|$addToken#";
+        });
+      }
+    } else if (value == Options.ltp.index) {
+      WatchListModel.mWatchList.sort((a, b) {
+        return a['ltp'].compareTo(b['ltp']);
+      });
+      addScripts = "";
+      for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+        setState(() {
+          addExchange = WatchListModel.mWatchList[i]['exch'];
+          addToken = WatchListModel.mWatchList[i]['token'];
+          addScripts += "$addExchange|$addToken#";
+        });
+      }
+    } else if (value == Options.perChange.index) {
+      WatchListModel.mWatchList.sort((a, b) {
+        return a['perChange'].compareTo(b['perChange']);
+      });
+      addScripts = "";
+      for (var i = 0; i < WatchListModel.mWatchList.length; i++) {
+        setState(() {
+          addExchange = WatchListModel.mWatchList[i]['exch'];
+          addToken = WatchListModel.mWatchList[i]['token'];
+          addScripts += "$addExchange|$addToken#";
+        });
+      }
+    }
   }
 
   Future closeSession() async {
@@ -375,12 +446,9 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     http.StreamedResponse response = await request.send();
 
     if (response.statusCode == 200) {
-      // print(await response.stream.bytesToString());
       createSession();
       marketWatchList(1);
-    } else {
-      // print(response.reasonPhrase);
-    }
+    } else {}
   }
 
   Future createSession() async {
@@ -392,8 +460,6 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     var bytes = utf8.encode(ConstVariable.sessionId);
     final bytes1 = utf8.encode(sha256.convert(bytes).toString());
     ConstVariable.sha556Session = sha256.convert(bytes1).toString();
-
-    print(ConstVariable.sha556Session);
     var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
     var request = http.Request(
         'POST', Uri.parse('http://154.83.3.25:8889/NorenWsHelper/CreateSess'));
@@ -425,18 +491,20 @@ class _WatchlistScreenState extends State<WatchlistScreen>
 
     Map mapRes = json.decode(response.body);
     if (mapRes['stat'] == "Ok") {
-      setState(() {
-        WatchListModel.mWatchList = mapRes["values"];
-        final resp = MarketWatchScrips.fromJson(
-            jsonDecode(response.body) as Map<String, dynamic>);
-        ConstVariable.data = resp.values;
-        final depthDesp = MarketDepthScrips.fromJson(
-            jsonDecode(response.body) as Map<String, dynamic>);
-        ConstVariable.mdpdata = depthDesp.mdpdata;
-        clientDetail(context: context);
-        userDetail(context: context);
-        log("MarkWatchList Data's :*: ${WatchListModel.mWatchList}");
-      });
+      if (mounted) {
+        setState(() {
+          WatchListModel.mWatchList = mapRes["values"];
+          final resp = MarketWatchScrips.fromJson(
+              jsonDecode(response.body) as Map<String, dynamic>);
+          ConstVariable.data = resp.values;
+          final depthDesp = MarketDepthScrips.fromJson(
+              jsonDecode(response.body) as Map<String, dynamic>);
+          ConstVariable.mdpdata = depthDesp.mdpdata;
+          clientDetail(context: context);
+          userDetail(context: context);
+          log("MarkWatchList Data's :*: ${WatchListModel.mWatchList}");
+        });
+      }
 
       setState(() {
         if (WebSocketConnection.wsConnected == false) {
@@ -451,6 +519,47 @@ class _WatchlistScreenState extends State<WatchlistScreen>
         ScaffoldMessenger.of(context)
             .showSnackBar(sb.unSuccessBar("Session Expired"));
       }
+    }
+  }
+
+  Future addScript(addScripts) async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.addScrip),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","wlname":"${WatchListModel.selectedIndex}","scrips":"$addScripts"}&jKey=${ConstVariable.sessionId}''');
+
+      Map mapRes = json.decode(response.body);
+      log("$mapRes");
+      if (mapRes['stat'] == "Ok") {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.successBar("Script Sorted"));
+        marketWatchList(WatchListModel.selectedIndex);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));
+    }
+  }
+
+  Future deleteScript(script) async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.deleteScrip),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","wlname":"${WatchListModel.selectedIndex}","scrips":"$script"}&jKey=${ConstVariable.sessionId}''');
+
+      Map mapRes = json.decode(response.body);
+      log("$mapRes");
+      if (mapRes['stat'] == "Ok") {
+        // marketWatchList(WatchListModel.selectedIndex);
+        addScript(addScripts);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));
     }
   }
 }

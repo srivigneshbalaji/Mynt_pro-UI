@@ -9,6 +9,6 @@ export 'account/profile.dart';
 export 'account/change_password.dart';
 export 'search/search_screen.dart';
 export 'watchList/watchlist_info.dart';
-export 'editWatchList/edit_watchlist.dart';
+// export 'editWatchList/edit_watchlist.dart';
 export 'login/forgot_pass.dart';
 export 'login/log_in.dart';

@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print, depend_on_referenced_packages
 
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +40,7 @@ class QuickAuth {
       if (sts == "Ok") {
         ConstVariable.sessionId = mapRes['susertoken'];
 
-        log("USER-SESSION ${ConstVariable.sessionId}");
+        print("USER-SESSION ${ConstVariable.sessionId}");
         ConstVariable.userId = mapRes['uid'];
         ConstVariable.accId = mapRes['actid'];
         ConstVariable.brokerName = mapRes['brkname'];
@@ -58,6 +57,10 @@ class QuickAuth {
         ScaffoldMessenger.of(context).showSnackBar(sb.successBar("Success"));
       } else {
         var errorMsg = mapRes['emsg'];
+
+        if (errorMsg == "Invalid Input : Password Expired") {
+          Navigator.pushNamed(context, "changePassword");
+        }
         ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(errorMsg));
       }
     } catch (e) {

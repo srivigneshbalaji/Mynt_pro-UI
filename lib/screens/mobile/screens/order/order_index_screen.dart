@@ -114,8 +114,8 @@ class _OrderScreenState extends State<OrderScreen>
             '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
 
     var mapRes = json.decode(response.body);
-    String stat = mapRes[0]['stat'];
-
+    String stat = mapRes['stat'];
+    // String stat = mapRes[0]['stat'];
     if (stat == "Ok") {
       setState(() {
         OrderBookModel.orderBook = json.decode(response.body);
@@ -135,6 +135,9 @@ class _OrderScreenState extends State<OrderScreen>
           }
         }
       });
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(sb.unSuccessBar("NO Order Data"));
     }
   }
 
