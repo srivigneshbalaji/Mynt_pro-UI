@@ -23,9 +23,7 @@ class WatchListData extends StatelessWidget {
             AsyncSnapshot<TouchlineAcknowledgementStream>
                 snapshotAcknowledgement) {
           if (snapshotAcknowledgement.data == null) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Container();
           }
           data.change = "0.00";
           data.perChange = "0.00";
@@ -124,61 +122,56 @@ class WatchListData extends StatelessWidget {
 
   Container watchListDataList(Size size) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: size.height * .0012),
-      height: size.height * .062,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(0, 4.6, 0, 4.6),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  data.symbolname.toString().toUpperCase(),
-                  style: listTitle(size),
-                ),
-                Text(data.ltp!, style: ltpUpTextStyle(size)
-                    // : ltpDownTextStyle(size),
-                    )
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  data.exc!.toUpperCase(),
-                  style: listSubTitle(size),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                      color: che > 0 || pChange > 0
-                          ? pcUpBackground()
-                          : pcDownBackground(),
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(12))),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(5.0, 1, 5, 3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          "${che.toStringAsFixed(2)} ($pChange%)",
-                          style: che > 0 || pChange > 0
-                              ? pcUpTextStyle(size)
-                              : pcDownTextStyle(size),
-                        ),
-                        che > 0 || pChange > 0
-                            ? SvgPicture.asset("assets/arrowUp.svg")
-                            : SvgPicture.asset("assets/arrowDown.svg"),
-                      ],
-                    ),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                data.symbolname.toString().toUpperCase(),
+                style: listTitle(size),
+              ),
+              Text(data.ltp!, style: ltpUpTextStyle(size)
+                  // : ltpDownTextStyle(size),
+                  )
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                data.exc!.toUpperCase(),
+                style: listSubTitle(size),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                    color: che > 0 || pChange > 0
+                        ? pcUpBackground()
+                        : pcDownBackground(),
+                    borderRadius: const BorderRadius.all(Radius.circular(12))),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(5.0, 1, 5, 3),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "${che.toStringAsFixed(2)} ($pChange%)",
+                        style: che > 0 || pChange > 0
+                            ? pcUpTextStyle(size)
+                            : pcDownTextStyle(size),
+                      ),
+                      che > 0 || pChange > 0
+                          ? SvgPicture.asset("assets/arrowUp.svg")
+                          : SvgPicture.asset("assets/arrowDown.svg"),
+                    ],
                   ),
                 ),
-              ],
-            )
-          ],
-        ),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }

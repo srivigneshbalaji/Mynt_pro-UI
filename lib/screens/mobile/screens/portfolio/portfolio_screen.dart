@@ -10,7 +10,10 @@ import '../../../../constant/const_var.dart';
 import '../../../../constant/constants.dart';
 import '../../../../model/portfolio_model.dart';
 import '../../../../themes/theme_model.dart';
-import 'portfolio.dart';
+import '../screens.dart';
+import 'holding_screen.dart';
+
+import 'position_screen.dart';
 
 class PortfolioScreen extends StatefulWidget {
   const PortfolioScreen({super.key});
@@ -98,29 +101,36 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   }
 
   Future positionBook() async {
-    http.Response response = await http.post(Uri.parse(ApiLinks.positionBook),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}"}&jKey=${ConstVariable.sessionId}''');
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.positionBook),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}"}&jKey=${ConstVariable.sessionId}''');
 
-    var mapRes = json.decode(response.body);
-    String stat = mapRes['stat'];
-    String emgs = mapRes['emsg'];
-    print("Position-Book :: ${mapRes}");
+      var mapRes = json.decode(response.body);
+      String stat = mapRes['stat'];
+      String emgs = mapRes['emsg'];
+      print("Position-Book :: ${mapRes}");
+    } catch (e) {}
   }
 
   Future holding() async {
-    http.Response response = await http.post(Uri.parse(ApiLinks.holdings),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}","prd":"F"}&jKey=${ConstVariable.sessionId}''');
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.holdings),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}","prd":"F"}&jKey=${ConstVariable.sessionId}''');
 
-    List holdingRes = json.decode(response.body);
+      List holdingRes = json.decode(response.body);
 
-    print("Holding :: ${holdingRes}");
+      print("Holding :: ${holdingRes}");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          sb.unSuccessBar("Connection issue, Please Try again later"));
+    }
   }
 }

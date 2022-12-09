@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:device_information/device_information.dart';
 import 'package:mynt_pro/model/device_info.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../constant/constants.dart';
 import '../../../../model/models.dart';
 import '../../../../constant/snackbar.dart';
@@ -128,6 +129,13 @@ class _LogInState extends State<LogIn> {
                             style: listTitle(size),
                             controller: userId,
                             keyboardType: TextInputType.text,
+                            onSaved: (value) async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              ConstVariable.userId = prefs.getString('userId')!;
+                              value = ConstVariable.userId;
+                              print(value);
+                            },
                             onChanged: (onChanged) {
                               // final prefs =
                               //     await SharedPreferences.getInstance();

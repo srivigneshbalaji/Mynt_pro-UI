@@ -40,6 +40,7 @@ Future clientDetail({
           .showSnackBar(sb.unSuccessBar("Session Expired"));
     }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+        sb.unSuccessBar("Connection issue, Please Try again later"));
   }
 }

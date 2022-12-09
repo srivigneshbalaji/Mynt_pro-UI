@@ -1,18 +1,37 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mynt_pro/constant/constants.dart';
 import 'package:provider/provider.dart';
+import '../../../../api/api_links.dart';
+import '../../../../constant/const_var.dart';
+import '../../../../functions/script_info_fun.dart';
+import '../../../../model/script_info_model.dart';
 import '../../../../themes/theme_model.dart';
 
 class BuyOrder extends StatefulWidget {
   String exch;
   String scriptName;
-  BuyOrder({super.key, required this.exch, required this.scriptName});
+  String tok;
+  BuyOrder(
+      {super.key,
+      required this.exch,
+      required this.scriptName,
+      required this.tok});
 
   @override
-  State<BuyOrder> createState() => _BuyOrderState(exch, scriptName);
+  State<BuyOrder> createState() => _BuyOrderState(exch, scriptName, tok);
 }
 
 class _BuyOrderState extends State<BuyOrder> {
+  @override
+  void initState() {
+    scriptInfo(exch, tok);
+    super.initState();
+  }
+
+  String segment = "";
   bool isChecked = false;
   final diskQty = TextEditingController();
   final qTy = TextEditingController();
@@ -23,15 +42,18 @@ class _BuyOrderState extends State<BuyOrder> {
   final mktProt = TextEditingController();
   final trigger = TextEditingController();
   final triggerPrice = TextEditingController();
-  List<bool> productBtn = [true, false, false, false, false];
+  List<bool> eqtProductBtn = [true, false, false, false, false];
+  List<bool> futProductBtn = [true, false, false, false];
   List<bool> priceTypeBtn = [true, false, false, false];
   List<bool> validityBtn = [true, false];
-  List<String> product = ["CNC", "MIS", "MTF", "CO", "BO"];
+  List<String> eqtProduct = ["CNC", "MIS", "MTF", "CO", "BO"];
+  List<String> futProduct = ["NRML", "MIS", "CO", "BO"];
   List<String> priceType = ["LIMIT", "MARKET", "SL", "SLM"];
   List<String> validity = ["Day", "IOC"];
   String exch;
   String scriptName;
-  _BuyOrderState(this.exch, this.scriptName);
+  String tok;
+  _BuyOrderState(this.exch, this.scriptName, this.tok);
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -68,7 +90,9 @@ class _BuyOrderState extends State<BuyOrder> {
                           height: 30,
                           child: ListView(
                               scrollDirection: Axis.horizontal,
-                              children: productBtns(size)),
+                              children: segment == "EQT"
+                                  ? eqtProductBtns(size)
+                                  : futProductBtns(size)),
                         ),
                         sizedHeight(size * .3),
                         const Divider(),
@@ -84,86 +108,192 @@ class _BuyOrderState extends State<BuyOrder> {
                         sizedHeight(size * .3),
                         const Divider(),
                         sizedHeight(size * .1),
+                        segment == "EQT"
+                            ? Column(
+                                children: [
+                                  // CNC || MIS || MTF && LIMIT
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[0] && priceTypeBtn[0],
+                                    child: cncLimit(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[1] && priceTypeBtn[0],
+                                    child: cncLimit(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[2] && priceTypeBtn[0],
+                                    child: cncLimit(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[0] && priceTypeBtn[1],
+                                    child: cncMarket(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[1] && priceTypeBtn[1],
+                                    child: cncMarket(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[2] && priceTypeBtn[1],
+                                    child: cncMarket(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[0] && priceTypeBtn[2],
+                                    child: cncSl(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[1] && priceTypeBtn[2],
+                                    child: cncSl(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[2] && priceTypeBtn[2],
+                                    child: cncSl(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[0] && priceTypeBtn[3],
+                                    child: cncSlm(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[1] && priceTypeBtn[3],
+                                    child: cncSlm(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        eqtProductBtn[2] && priceTypeBtn[3],
+                                    child: cncSlm(size),
+                                  ),
 
-                        // CNC || MIS || MTF && LIMIT
-                        Visibility(
-                          visible: productBtn[0] && priceTypeBtn[0],
-                          child: cncLimit(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[1] && priceTypeBtn[0],
-                          child: cncLimit(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[2] && priceTypeBtn[0],
-                          child: cncLimit(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[0] && priceTypeBtn[1],
-                          child: cncMarket(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[1] && priceTypeBtn[1],
-                          child: cncMarket(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[2] && priceTypeBtn[1],
-                          child: cncMarket(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[0] && priceTypeBtn[2],
-                          child: cncSl(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[1] && priceTypeBtn[2],
-                          child: cncSl(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[2] && priceTypeBtn[2],
-                          child: cncSl(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[0] && priceTypeBtn[3],
-                          child: cncSlm(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[1] && priceTypeBtn[3],
-                          child: cncSlm(size),
-                        ),
-                        Visibility(
-                          visible: productBtn[2] && priceTypeBtn[3],
-                          child: cncSlm(size),
-                        ),
+                                  // CO && LIMIT
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[3] && priceTypeBtn[0],
+                                      child: coLimit(size)),
 
-                        // CO && LIMIT
-                        Visibility(
-                            visible: productBtn[3] && priceTypeBtn[0],
-                            child: coLimit(size)),
+                                  // CO && MARKET
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[3] && priceTypeBtn[1],
+                                      child: coMarket(size)),
 
-                        // CO && MARKET
-                        Visibility(
-                            visible: productBtn[3] && priceTypeBtn[1],
-                            child: coMarket(size)),
+                                  // CO && SL
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[3] && priceTypeBtn[2],
+                                      child: coSl(size)),
 
-                        // CO && SL
-                        Visibility(
-                            visible: productBtn[3] && priceTypeBtn[2],
-                            child: coSl(size)),
+                                  // BO && LIMIT
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[4] && priceTypeBtn[0],
+                                      child: boLimit(size)),
 
-                        // BO && LIMIT
-                        Visibility(
-                            visible: productBtn[4] && priceTypeBtn[0],
-                            child: boLimit(size)),
+                                  // BO && MARKET
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[4] && priceTypeBtn[1],
+                                      child: boMarket(size)),
 
-                        // BO && MARKET
-                        Visibility(
-                            visible: productBtn[4] && priceTypeBtn[1],
-                            child: boMarket(size)),
+                                  //BO && SL
+                                  Visibility(
+                                      visible:
+                                          eqtProductBtn[4] && priceTypeBtn[2],
+                                      child: boSl(size)),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  // CNC || MIS || MTF && LIMIT
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[0] && priceTypeBtn[0],
+                                    child: cncLimit(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[1] && priceTypeBtn[0],
+                                    child: cncLimit(size),
+                                  ),
 
-                        //BO && SL
-                        Visibility(
-                            visible: productBtn[4] && priceTypeBtn[2],
-                            child: boSl(size)),
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[0] && priceTypeBtn[1],
+                                    child: cncMarket(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[1] && priceTypeBtn[1],
+                                    child: cncMarket(size),
+                                  ),
+
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[0] && priceTypeBtn[2],
+                                    child: cncSl(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[1] && priceTypeBtn[2],
+                                    child: cncSl(size),
+                                  ),
+
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[0] && priceTypeBtn[3],
+                                    child: cncSlm(size),
+                                  ),
+                                  Visibility(
+                                    visible:
+                                        futProductBtn[1] && priceTypeBtn[3],
+                                    child: cncSlm(size),
+                                  ),
+
+                                  // CO && LIMIT
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[2] && priceTypeBtn[0],
+                                      child: coLimit(size)),
+
+                                  // CO && MARKET
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[2] && priceTypeBtn[1],
+                                      child: coMarket(size)),
+
+                                  // CO && SL
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[2] && priceTypeBtn[2],
+                                      child: coSl(size)),
+
+                                  // BO && LIMIT
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[3] && priceTypeBtn[0],
+                                      child: boLimit(size)),
+
+                                  // BO && MARKET
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[3] && priceTypeBtn[1],
+                                      child: boMarket(size)),
+
+                                  //BO && SL
+                                  Visibility(
+                                      visible:
+                                          futProductBtn[3] && priceTypeBtn[2],
+                                      child: boSl(size)),
+                                ],
+                              ),
                         sizedHeight(size * .3),
                         const Divider(),
                         sizedHeight(size * .1),
@@ -685,24 +815,25 @@ class _BuyOrderState extends State<BuyOrder> {
 
 //  LIST OF BUTTONS
 
-  List<Widget> productBtns(Size size) {
-    List<Widget> listButtons = List.generate(product.length, (i) {
+  List<Widget> eqtProductBtns(Size size) {
+    List<Widget> listButtons = List.generate(eqtProduct.length, (i) {
       return Padding(
         padding: const EdgeInsets.only(right: 10),
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
             // foregroundColor: Colors.amberAccent,
-            backgroundColor: productBtn[i] ? Colors.blueAccent : Colors.white,
+            backgroundColor:
+                eqtProductBtn[i] ? Colors.blueAccent : Colors.white,
           ),
           onPressed: () {
             setState(() {
-              productBtn[0] = false;
-              productBtn[1] = false;
-              productBtn[2] = false;
-              productBtn[3] = false;
-              productBtn[4] = false;
-              productBtn[i] = true;
-              if (productBtn[3] || productBtn[4]) {
+              eqtProductBtn[0] = false;
+              eqtProductBtn[1] = false;
+              eqtProductBtn[2] = false;
+              eqtProductBtn[3] = false;
+              eqtProductBtn[4] = false;
+              eqtProductBtn[i] = true;
+              if (eqtProductBtn[3] || eqtProductBtn[4]) {
                 priceType.remove("SLM");
                 // priceTypeBtn[0] = true;
               } else {
@@ -715,7 +846,46 @@ class _BuyOrderState extends State<BuyOrder> {
             });
           },
           child: Text(
-            product[i],
+            eqtProduct[i],
+            style: orderBtnText(size),
+          ),
+        ),
+      );
+    });
+    return listButtons;
+  }
+
+  List<Widget> futProductBtns(Size size) {
+    List<Widget> listButtons = List.generate(futProduct.length, (i) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            // foregroundColor: Colors.amberAccent,
+            backgroundColor:
+                futProductBtn[i] ? Colors.blueAccent : Colors.white,
+          ),
+          onPressed: () {
+            setState(() {
+              futProductBtn[0] = false;
+              futProductBtn[1] = false;
+              futProductBtn[2] = false;
+              futProductBtn[3] = false;
+              futProductBtn[i] = true;
+              if (futProductBtn[2] || futProductBtn[3]) {
+                priceType.remove("SLM");
+                // priceTypeBtn[0] = true;
+              } else {
+                priceType.remove("SLM");
+                priceType.add("SLM");
+                // priceTypeBtn[0] = true;
+                // priceTypeBtn[1] = false;
+                // priceTypeBtn[2] = false;
+              }
+            });
+          },
+          child: Text(
+            futProduct[i],
             style: orderBtnText(size),
           ),
         ),
@@ -770,5 +940,27 @@ class _BuyOrderState extends State<BuyOrder> {
       );
     });
     return listButtons;
+  }
+
+  Future scriptInfo(exchange, token) async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.secInfo),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","exch":"$exchange","token":"$token"}&jKey=${ConstVariable.sessionId}''');
+
+      setState(() {
+        ScriptInfoModel.scriptInfoRes = json.decode(response.body);
+        var stat = ScriptInfoModel.scriptInfoRes['stat'];
+        if (stat == "Ok") {
+          segment = ScriptInfoModel.scriptInfoRes['seg'];
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(sb.unSuccessBar("Session Expired"));
+        }
+      });
+    } catch (e) {}
   }
 }

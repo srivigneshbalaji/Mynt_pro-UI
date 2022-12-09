@@ -106,52 +106,60 @@ class _OrderScreenState extends State<OrderScreen>
   }
 
   Future orderBook() async {
-    http.Response response = await http.post(Uri.parse(ApiLinks.orderBook),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.orderBook),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
 
-    var mapRes = json.decode(response.body);
-    String stat = mapRes['stat'];
-    // String stat = mapRes[0]['stat'];
-    if (stat == "Ok") {
-      setState(() {
-        OrderBookModel.orderBook = json.decode(response.body);
-        OrderBookModel.executedOrderBook = [];
-        OrderBookModel.pendingOrderBook = [];
-        for (var i = 0; i < OrderBookModel.orderBook.length; i++) {
-          if (OrderBookModel.orderBook[i]['status'] == "REJECTED" ||
-              OrderBookModel.orderBook[i]['status'] == "CANCELED" ||
-              OrderBookModel.orderBook[i]['status'] == "COMPLETE" ||
-              OrderBookModel.orderBook[i]['status'] == "INVALID_STATUS_TYPE") {
-            OrderBookModel.executedOrderBook.add(OrderBookModel.orderBook[i]);
+      var mapRes = json.decode(response.body);
+      String stat = mapRes['stat'];
+      // String stat = mapRes[0]['stat'];
+      if (stat == "Ok") {
+        setState(() {
+          OrderBookModel.orderBook = json.decode(response.body);
+          OrderBookModel.executedOrderBook = [];
+          OrderBookModel.pendingOrderBook = [];
+          for (var i = 0; i < OrderBookModel.orderBook.length; i++) {
+            if (OrderBookModel.orderBook[i]['status'] == "REJECTED" ||
+                OrderBookModel.orderBook[i]['status'] == "CANCELED" ||
+                OrderBookModel.orderBook[i]['status'] == "COMPLETE" ||
+                OrderBookModel.orderBook[i]['status'] ==
+                    "INVALID_STATUS_TYPE") {
+              OrderBookModel.executedOrderBook.add(OrderBookModel.orderBook[i]);
 
-            log("EXCORD ${OrderBookModel.executedOrderBook}");
-          } else {
-            OrderBookModel.pendingOrderBook.add(OrderBookModel.orderBook[i]);
-            log("${OrderBookModel.pendingOrderBook}");
+              log("EXCORD ${OrderBookModel.executedOrderBook}");
+            } else {
+              OrderBookModel.pendingOrderBook.add(OrderBookModel.orderBook[i]);
+              log("${OrderBookModel.pendingOrderBook}");
+            }
           }
-        }
-      });
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(sb.unSuccessBar("NO Order Data"));
+        });
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.unSuccessBar("NO Order Data"));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          sb.unSuccessBar("Connection issue, Please Try again later"));
     }
   }
 
   Future tradeBook() async {
-    http.Response response = await http.post(Uri.parse(ApiLinks.tradeBook),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}"}&jKey=${ConstVariable.sessionId}''');
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.tradeBook),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}"}&jKey=${ConstVariable.sessionId}''');
 
-    var mapRes = json.decode(response.body);
-    String stat = mapRes['stat'];
+      var mapRes = json.decode(response.body);
+      String stat = mapRes['stat'];
 
-    print("Trade-Book :: ${mapRes}");
+      print("Trade-Book :: ${mapRes}");
+    } catch (e) {}
   }
 }

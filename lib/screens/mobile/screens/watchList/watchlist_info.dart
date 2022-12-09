@@ -16,26 +16,30 @@ class WatchListInfo extends StatefulWidget {
   final MarketDepth marketDepth;
   String exchange;
   String scriptName;
+  String token;
   WatchListInfo({
     super.key,
     required this.exchange,
     required this.marketDepth,
     required this.scriptName,
+    required this.token,
   });
 
   @override
   State<WatchListInfo> createState() =>
-      _WatchListInfoState(exchange, marketDepth, scriptName);
+      _WatchListInfoState(exchange, marketDepth, scriptName, token);
 }
 
 class _WatchListInfoState extends State<WatchListInfo> {
   String exchange;
   final MarketDepth marketDepth;
   String scriptName;
+  String token;
   bool isDepth = true;
   bool isChart = false;
 
-  _WatchListInfoState(this.exchange, this.marketDepth, this.scriptName);
+  _WatchListInfoState(
+      this.exchange, this.marketDepth, this.scriptName, this.token);
   final flutterWebViewPlugin = FlutterWebviewPlugin();
 
   bool buyActive = false;
@@ -100,7 +104,9 @@ class _WatchListInfoState extends State<WatchListInfo> {
                         onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
                                 builder: (context) => BuyOrder(
-                                    scriptName: scriptName, exch: exchange))),
+                                    scriptName: scriptName,
+                                    exch: exchange,
+                                    tok: token))),
                       )),
                   SizedBox(
                       width: 150,

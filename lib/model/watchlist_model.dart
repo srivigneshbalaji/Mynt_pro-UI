@@ -14,6 +14,11 @@ class WatchListModel extends ChangeNotifier {
   static int selectedIndex = 1;
   static String watchStat = "";
   static List mWatchList = [];
+  static List mWatchList1 = [];
+  static List mWatchList2 = [];
+  static List mWatchList3 = [];
+  static List mWatchList4 = [];
+  static List mWatchList5 = [];
   static Icon actionIcon = const Icon(Icons.search);
   WatchListModel({
     required this.symbolName,

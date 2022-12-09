@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:mynt_pro/screens/mobile/screens/watchList/watchlist_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,7 +33,7 @@ class WatchlistScreen extends StatefulWidget {
     super.key,
   });
 
-  static const String routeName = 'WatchListModel.watchList';
+  static const String routeName = 'watchList';
   static Route route() {
     return MaterialPageRoute(
       settings: const RouteSettings(name: routeName),
@@ -48,6 +49,7 @@ List<Values>? data;
 
 class _WatchlistScreenState extends State<WatchlistScreen>
     with SingleTickerProviderStateMixin {
+  bool _isLoaderVisible = false;
   late TabController _tabController;
   final MySnackBars sb = MySnackBars();
   final List<Tab> mWLTabs = <Tab>[
@@ -60,6 +62,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   var popupMenuItemIndex = 0;
   @override
   void initState() {
+    _isLoaderVisible = false;
     _tabController = TabController(length: mWLTabs.length, vsync: this);
     super.initState();
     closeSession();
@@ -162,6 +165,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                           ),
                         ),
                         PopupMenuButton(
+                          icon: Icon(Icons.sort),
                           onSelected: (value) {
                             _onMenuItemSelected(value as int);
                           },
@@ -170,14 +174,13 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                                 BorderRadius.all(Radius.circular(8.0)),
                           ),
                           itemBuilder: (ctx) => [
-                            _buildPopupMenuItem('SYMBOL ASC', Icons.search,
-                                Options.symbolAsc.index, size),
-                            _buildPopupMenuItem('SYMBOL DESC', Icons.search,
-                                Options.symbolDesc.index, size),
                             _buildPopupMenuItem(
-                                'LTP', Icons.abc, Options.ltp.index, size),
-                            _buildPopupMenuItem('PER.CHANGE', Icons.abc,
-                                Options.perChange.index, size),
+                                'SYMBOL ASC', Options.symbolAsc.index, size),
+                            _buildPopupMenuItem(
+                                'SYMBOL DESC', Options.symbolDesc.index, size),
+                            _buildPopupMenuItem('LTP', Options.ltp.index, size),
+                            _buildPopupMenuItem(
+                                'PER.CHANGE', Options.perChange.index, size),
                           ],
                         )
                       ],
@@ -220,120 +223,128 @@ class _WatchlistScreenState extends State<WatchlistScreen>
                 ),
                 // tab bar view here
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: mWLTabs.map((Tab tab) {
-                      return WatchListModel.mWatchList.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "This WatchList has no symbols",
-                                    style: noDataTextStyle(size),
-                                  ),
-                                  TextButton.icon(
-                                      onPressed: () {
-                                        Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    SearchScreen(
-                                                        fetchMWList:
-                                                            marketWatchList)),
-                                            (route) => true);
-                                      },
-                                      icon: const Icon(
-                                        Icons.add_box_outlined,
-                                        color: Colors.grey,
-                                      ),
-                                      label: Text(
-                                        "Add script",
-                                        style: listSubTitle(size),
-                                      ))
-                                ],
-                              ),
-                            )
-                          : ReorderableListView.builder(
-                              itemCount: WatchListModel.mWatchList.length,
-                              itemBuilder: (context, index) {
-                                return InkWell(
-                                  key: ValueKey(
-                                      WatchListModel.mWatchList[index]),
-                                  onTap: () {
-                                    var exc = WatchListModel.mWatchList[index]
-                                            ["exch"]
-                                        .toString();
-                                    var token = WatchListModel.mWatchList[index]
-                                            ["token"]
-                                        .toString();
-                                    Map watchlistDepth = {
-                                      "exch": exc,
-                                      "token": token
-                                    };
-                                    WebSocketConnection.estcon(
-                                        "u", WatchListModel.mWatchList, true);
-                                    WebSocketConnection.estcon(
-                                        "d", watchlistDepth, false);
-                                    Navigator.of(context)
-                                        .push(MaterialPageRoute(
-                                            builder: (context) => WatchListInfo(
-                                                  scriptName: WatchListModel
-                                                          .mWatchList[index]
-                                                      ["tsym"],
-                                                  marketDepth: ConstVariable
-                                                      .mdpdata![index],
-                                                  exchange: WatchListModel
-                                                          .mWatchList[index]
-                                                      ["exch"],
-                                                )));
-                                  },
-                                  child: WatchListData(
-                                      data: ConstVariable.data![index]),
-                                );
-                              },
-                              onReorder: (int oldIndex, int newIndex) {
-                                delScripts = "";
-                                for (var i = 0;
-                                    i < WatchListModel.mWatchList.length;
-                                    i++) {
-                                  setState(() {
-                                    delExchange =
-                                        WatchListModel.mWatchList[i]['exch'];
-                                    delToken =
-                                        WatchListModel.mWatchList[i]['token'];
+                  child: LoaderOverlay(
+                    useDefaultLoading: true,
+                    overlayColor: Colors.white,
+                    overlayOpacity: 1,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: mWLTabs.map((Tab tab) {
+                        return WatchListModel.mWatchList.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "This WatchList has no symbols",
+                                      style: noDataTextStyle(size),
+                                    ),
+                                    TextButton.icon(
+                                        onPressed: () {
+                                          Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      SearchScreen(
+                                                          fetchMWList:
+                                                              marketWatchList)),
+                                              (route) => true);
+                                        },
+                                        icon: const Icon(
+                                          Icons.add_box_outlined,
+                                          color: Colors.grey,
+                                        ),
+                                        label: Text(
+                                          "Add script",
+                                          style: listSubTitle(size),
+                                        ))
+                                  ],
+                                ),
+                              )
+                            : ReorderableListView.builder(
+                                itemCount: WatchListModel.mWatchList.length,
+                                itemBuilder: (context, index) {
+                                  return InkWell(
+                                    key: ValueKey(index),
+                                    onTap: () {
+                                      var exc = WatchListModel.mWatchList[index]
+                                              ["exch"]
+                                          .toString();
+                                      var token = WatchListModel
+                                          .mWatchList[index]["token"]
+                                          .toString();
+                                      Map watchlistDepth = {
+                                        "exch": exc,
+                                        "token": token
+                                      };
+                                      WebSocketConnection.estcon(
+                                          "u", WatchListModel.mWatchList, true);
+                                      WebSocketConnection.estcon(
+                                          "d", watchlistDepth, false);
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  WatchListInfo(
+                                                    scriptName: WatchListModel
+                                                            .mWatchList[index]
+                                                        ["tsym"],
+                                                    marketDepth: ConstVariable
+                                                        .mdpdata![index],
+                                                    token: WatchListModel
+                                                            .mWatchList[index]
+                                                        ["token"],
+                                                    exchange: WatchListModel
+                                                            .mWatchList[index]
+                                                        ["exch"],
+                                                  )));
+                                    },
+                                    child: WatchListData(
+                                        data: ConstVariable.data![index]),
+                                  );
+                                },
+                                onReorder: (int oldIndex, int newIndex) {
+                                  delScripts = "";
+                                  for (var i = 0;
+                                      i < WatchListModel.mWatchList.length;
+                                      i++) {
+                                    setState(() {
+                                      delExchange =
+                                          WatchListModel.mWatchList[i]['exch'];
+                                      delToken =
+                                          WatchListModel.mWatchList[i]['token'];
 
-                                    delScripts += "$delExchange|$delToken#";
-                                  });
-                                }
-
-                                setState(() {
-                                  if (newIndex > oldIndex) {
-                                    newIndex = newIndex - 1;
+                                      delScripts += "$delExchange|$delToken#";
+                                    });
                                   }
 
-                                  final element = WatchListModel.mWatchList
-                                      .removeAt(oldIndex);
-                                  WatchListModel.mWatchList
-                                      .insert(newIndex, element);
-                                });
-                                log("AFTER REORDER ::: ${WatchListModel.mWatchList}");
-                                addScripts = "";
-                                for (var i = 0;
-                                    i < WatchListModel.mWatchList.length;
-                                    i++) {
                                   setState(() {
-                                    addExchange =
-                                        WatchListModel.mWatchList[i]['exch'];
-                                    addToken =
-                                        WatchListModel.mWatchList[i]['token'];
-                                    addScripts += "$addExchange|$addToken#";
+                                    if (newIndex > oldIndex) {
+                                      newIndex = newIndex - 1;
+                                    }
+
+                                    final element = WatchListModel.mWatchList
+                                        .removeAt(oldIndex);
+                                    WatchListModel.mWatchList
+                                        .insert(newIndex, element);
                                   });
-                                }
-                                deleteScript(delScripts);
-                              },
-                            );
-                    }).toList(),
+                                  log("AFTER REORDER ::: ${WatchListModel.mWatchList}");
+                                  addScripts = "";
+                                  for (var i = 0;
+                                      i < WatchListModel.mWatchList.length;
+                                      i++) {
+                                    setState(() {
+                                      addExchange =
+                                          WatchListModel.mWatchList[i]['exch'];
+                                      addToken =
+                                          WatchListModel.mWatchList[i]['token'];
+                                      addScripts += "$addExchange|$addToken#";
+                                    });
+                                  }
+                                  deleteScript(delScripts);
+                                },
+                              );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],
@@ -344,25 +355,12 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     );
   }
 
-  PopupMenuItem _buildPopupMenuItem(
-      String title, IconData iconData, int position, Size size) {
+  PopupMenuItem _buildPopupMenuItem(String title, int position, Size size) {
     return PopupMenuItem(
       value: position,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(
-            iconData,
-            color: Colors.black,
-          ),
-          SizedBox(
-            width: 10,
-          ),
-          Text(
-            title,
-            style: txtBtnTextStyle(size),
-          ),
-        ],
+      child: Text(
+        title,
+        style: txtBtnTextStyle(size),
       ),
     );
   }
@@ -482,44 +480,59 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   }
 
   Future marketWatchList(selectedIndex) async {
-    http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body:
-            '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
+    context.loaderOverlay.show();
+    setState(() {
+      _isLoaderVisible = context.loaderOverlay.visible;
+    });
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.marketWatch),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","wlname":"$selectedIndex"}&jKey=${ConstVariable.sessionId}''');
 
-    Map mapRes = json.decode(response.body);
-    if (mapRes['stat'] == "Ok") {
-      if (mounted) {
-        setState(() {
-          WatchListModel.mWatchList = mapRes["values"];
-          final resp = MarketWatchScrips.fromJson(
-              jsonDecode(response.body) as Map<String, dynamic>);
-          ConstVariable.data = resp.values;
-          final depthDesp = MarketDepthScrips.fromJson(
-              jsonDecode(response.body) as Map<String, dynamic>);
-          ConstVariable.mdpdata = depthDesp.mdpdata;
-          clientDetail(context: context);
-          userDetail(context: context);
-          log("MarkWatchList Data's :*: ${WatchListModel.mWatchList}");
-        });
-      }
-
-      setState(() {
-        if (WebSocketConnection.wsConnected == false) {
-          WebSocketConnection.estcon("t", WatchListModel.mWatchList, false);
-        } else {
-          WebSocketConnection.estcon("t", WatchListModel.mWatchList, true);
+      Map mapRes = json.decode(response.body);
+      if (mapRes['stat'] == "Ok") {
+        if (mounted) {
+          setState(() {
+            WatchListModel.mWatchList = mapRes["values"];
+            final resp = MarketWatchScrips.fromJson(
+                jsonDecode(response.body) as Map<String, dynamic>);
+            ConstVariable.data = resp.values;
+            final depthDesp = MarketDepthScrips.fromJson(
+                jsonDecode(response.body) as Map<String, dynamic>);
+            ConstVariable.mdpdata = depthDesp.mdpdata;
+            clientDetail(context: context);
+            userDetail(context: context);
+            log("MarkWatchList Data's :*: ${WatchListModel.mWatchList}");
+          });
         }
-      });
-    } else {
-      if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
-        Navigator.pushNamed(context, 'logIn');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(sb.unSuccessBar("Session Expired"));
+
+        setState(() {
+          if (WebSocketConnection.wsConnected == false) {
+            WebSocketConnection.estcon("t", WatchListModel.mWatchList, false);
+          } else {
+            WebSocketConnection.estcon("t", WatchListModel.mWatchList, true);
+          }
+        });
+      } else {
+        if (mapRes['emsg'] == "Session Expired :  Invalid Session Key") {
+          Navigator.pushNamed(context, 'logIn');
+          ScaffoldMessenger.of(context)
+              .showSnackBar(sb.unSuccessBar("Session Expired"));
+        }
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          sb.unSuccessBar("Connection issue, Please Try again later"));
     }
+    if (_isLoaderVisible) {
+      context.loaderOverlay.hide();
+    }
+    setState(() {
+      _isLoaderVisible = context.loaderOverlay.visible;
+    });
   }
 
   Future addScript(addScripts) async {

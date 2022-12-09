@@ -15,4 +15,5 @@ class ApiLinks {
   static String positionBook = "$mainBaseURL/PositionBook";
   static String holdings = "$mainBaseURL/Holdings";
   static String tradeBook = "$mainBaseURL/TradeBook";
+  static String secInfo = "$mainBaseURL/GetSecurityInfo";
 }
