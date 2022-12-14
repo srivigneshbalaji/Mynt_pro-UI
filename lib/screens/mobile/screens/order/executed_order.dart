@@ -1,15 +1,33 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:http/http.dart' as http;
+import '../../../../api/api_links.dart';
+import '../../../../constant/const_var.dart';
+import '../../../../constant/snackbar.dart';
 import '../../../../constant/text_style.dart';
 import '../../../../model/order_book_model.dart';
 import '../../../../themes/theme_model.dart';
 
-class ExecutedOrder extends StatelessWidget {
+class ExecutedOrder extends StatefulWidget {
   const ExecutedOrder({super.key});
 
+  @override
+  State<ExecutedOrder> createState() => _ExecutedOrderState();
+}
+
+class _ExecutedOrderState extends State<ExecutedOrder> {
+  @override
+  void initState() {
+    orderBook();
+    super.initState();
+  }
+
+  final MySnackBars sb = MySnackBars();
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -23,6 +41,8 @@ class ExecutedOrder extends StatelessWidget {
                             ['norentm']
                         .toString()
                         .split(" ");
+                    String orderStatus =
+                        OrderBookModel.executedOrderBook[index]['status'];
                     return Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
@@ -60,25 +80,28 @@ class ExecutedOrder extends StatelessWidget {
                                         fontWeight: FontWeight.w500,
                                         color: OrderBookModel.executedOrderBook[
                                                     index]['trantype'] ==
-                                                "S"
-                                            ? Colors.red
-                                            : Colors.blue)),
+                                                "B"
+                                            ? Colors.blue
+                                            : Colors.red)),
                               ),
                               Text(
-                                  "Qty: ${OrderBookModel.executedOrderBook[index]['dscqty']} / ${OrderBookModel.executedOrderBook[index]['qty']}",
+                                  "Qty: ${OrderBookModel.executedOrderBook[index]['qty']}",
                                   style: GoogleFonts.lexend()),
                               Text(time[0], style: GoogleFonts.lexend()),
                               TextButton(
                                 onPressed: () {},
                                 style: TextButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.green.withOpacity(.1)),
+                                    backgroundColor: orderStatus == "REJECTED"
+                                        ? Colors.red.withOpacity(.1)
+                                        : Colors.green.withOpacity(.1)),
                                 child: Text(
-                                  "${OrderBookModel.executedOrderBook[index]['status']}",
+                                  orderStatus,
                                   style: GoogleFonts.lexend(
                                       fontSize: size.height * 0.015,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.green),
+                                      color: orderStatus == "REJECTED"
+                                          ? Colors.red
+                                          : Colors.green),
                                 ),
                               )
                             ],
@@ -97,9 +120,35 @@ class ExecutedOrder extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "${OrderBookModel.executedOrderBook[index]['exch']} ${OrderBookModel.executedOrderBook[index]['prctyp']}",
-                                style: listSubTitle(size),
+                              Row(
+                                children: [
+                                  Text(
+                                    "${OrderBookModel.executedOrderBook[index]['exch']} / ${OrderBookModel.executedOrderBook[index]['prctyp']} /",
+                                    style: listSubTitle(size),
+                                  ),
+                                  if (OrderBookModel.executedOrderBook[index]
+                                          ['prd'] ==
+                                      "I") ...[
+                                    Text(
+                                      " MIS",
+                                      style: listSubTitle(size),
+                                    ),
+                                  ] else if (OrderBookModel
+                                          .executedOrderBook[index]['prd'] ==
+                                      "C") ...[
+                                    Text(
+                                      " CNC",
+                                      style: listSubTitle(size),
+                                    ),
+                                  ] else if (OrderBookModel
+                                          .executedOrderBook[index]['prd'] ==
+                                      "M") ...[
+                                    Text(
+                                      " NRML",
+                                      style: listSubTitle(size),
+                                    ),
+                                  ]
+                                ],
                               ),
                               Text(
                                   "LTP ${OrderBookModel.executedOrderBook[index]['exch']}",
@@ -121,5 +170,41 @@ class ExecutedOrder extends StatelessWidget {
                   style: noDataTextStyle(size),
                 )));
     });
+  }
+
+  Future orderBook() async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.orderBook),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
+
+      var mapRes = json.decode(response.body);
+      List newMapRes = mapRes;
+      String stat = newMapRes[0]['stat'];
+      if (stat == "Ok") {
+        setState(() {
+          OrderBookModel.orderBook = json.decode(response.body);
+          OrderBookModel.executedOrderBook = [];
+          OrderBookModel.pendingOrderBook = [];
+          for (var i = 0; i < OrderBookModel.orderBook.length; i++) {
+            if (OrderBookModel.orderBook[i]['status'] == "REJECTED" ||
+                OrderBookModel.orderBook[i]['status'] == "CANCELED" ||
+                OrderBookModel.orderBook[i]['status'] == "COMPLETE" ||
+                OrderBookModel.orderBook[i]['status'] ==
+                    "INVALID_STATUS_TYPE") {
+              OrderBookModel.executedOrderBook.add(OrderBookModel.orderBook[i]);
+            } else {
+              OrderBookModel.pendingOrderBook.add(OrderBookModel.orderBook[i]);
+            }
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          sb.unSuccessBar("Connection issue, Please Try again later"));
+    }
   }
 }

@@ -1,5 +1,5 @@
 class ApiLinks {
-  static String mainBaseURL = 'https://mynt.in/NorenWClientTP';
+  static String mainBaseURL = 'https://uat.mynt.in/NorenWClientTP';
 
   static String quickAuth = "$mainBaseURL/QuickAuth";
   static String logout = "$mainBaseURL/Logout";
@@ -16,4 +16,5 @@ class ApiLinks {
   static String holdings = "$mainBaseURL/Holdings";
   static String tradeBook = "$mainBaseURL/TradeBook";
   static String secInfo = "$mainBaseURL/GetSecurityInfo";
+  static String placeOrder = "$mainBaseURL/PlaceOrder";
 }

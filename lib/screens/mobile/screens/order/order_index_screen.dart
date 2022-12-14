@@ -1,19 +1,24 @@
 import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import '../../../../api/api_links.dart';
 import '../../../../constant/const_var.dart';
 import '../../../../constant/constants.dart';
-import '../../../../model/order_book_model.dart';
 import '../../../../themes/theme_model.dart';
 import '../screens.dart';
 import 'pending_order.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
+
+  static const String routeName = 'orderIndex';
+  static Route route() {
+    return MaterialPageRoute(
+      settings: const RouteSettings(name: routeName),
+      builder: (_) => const OrderScreen(),
+    );
+  }
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -25,8 +30,6 @@ class _OrderScreenState extends State<OrderScreen>
 
   @override
   void initState() {
-    orderBook();
-
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
     tradeBook();
@@ -77,10 +80,10 @@ class _OrderScreenState extends State<OrderScreen>
                     themeNotifier.isDark ? Colors.white : Colors.black,
                 tabs: const [
                   Tab(
-                    text: 'Pending',
+                    text: 'Executed',
                   ),
                   Tab(
-                    text: 'Executed',
+                    text: 'Pending',
                   ),
                   Tab(
                     text: 'Trade Book',
@@ -93,8 +96,8 @@ class _OrderScreenState extends State<OrderScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: const [
-                  PendingOrder(),
                   ExecutedOrder(),
+                  PendingOrder(),
                   TradeBookOrder()
                 ],
               ),
@@ -103,48 +106,6 @@ class _OrderScreenState extends State<OrderScreen>
         ),
       );
     });
-  }
-
-  Future orderBook() async {
-    try {
-      http.Response response = await http.post(Uri.parse(ApiLinks.orderBook),
-          headers: <String, String>{
-            'Content-Type': 'application/json',
-          },
-          body:
-              '''jData={"uid":"${ConstVariable.userId}"}&jKey=${ConstVariable.sessionId}''');
-
-      var mapRes = json.decode(response.body);
-      String stat = mapRes['stat'];
-      // String stat = mapRes[0]['stat'];
-      if (stat == "Ok") {
-        setState(() {
-          OrderBookModel.orderBook = json.decode(response.body);
-          OrderBookModel.executedOrderBook = [];
-          OrderBookModel.pendingOrderBook = [];
-          for (var i = 0; i < OrderBookModel.orderBook.length; i++) {
-            if (OrderBookModel.orderBook[i]['status'] == "REJECTED" ||
-                OrderBookModel.orderBook[i]['status'] == "CANCELED" ||
-                OrderBookModel.orderBook[i]['status'] == "COMPLETE" ||
-                OrderBookModel.orderBook[i]['status'] ==
-                    "INVALID_STATUS_TYPE") {
-              OrderBookModel.executedOrderBook.add(OrderBookModel.orderBook[i]);
-
-              log("EXCORD ${OrderBookModel.executedOrderBook}");
-            } else {
-              OrderBookModel.pendingOrderBook.add(OrderBookModel.orderBook[i]);
-              log("${OrderBookModel.pendingOrderBook}");
-            }
-          }
-        });
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(sb.unSuccessBar("NO Order Data"));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          sb.unSuccessBar("Connection issue, Please Try again later"));
-    }
   }
 
   Future tradeBook() async {

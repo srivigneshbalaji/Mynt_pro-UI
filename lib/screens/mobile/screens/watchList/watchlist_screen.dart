@@ -62,11 +62,9 @@ class _WatchlistScreenState extends State<WatchlistScreen>
   var popupMenuItemIndex = 0;
   @override
   void initState() {
-    _isLoaderVisible = false;
     _tabController = TabController(length: mWLTabs.length, vsync: this);
     super.initState();
     closeSession();
-
     _tabController.addListener(_getActiveTabIndex);
   }
 
@@ -81,8 +79,8 @@ class _WatchlistScreenState extends State<WatchlistScreen>
 
   @override
   void dispose() {
-    super.dispose();
     _tabController.dispose();
+    super.dispose();
   }
 
   String addExchange = "";

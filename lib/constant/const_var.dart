@@ -12,4 +12,5 @@ class ConstVariable {
   static bool authStatus = false;
   static List<Values>? data;
   static List<MarketDepth>? mdpdata;
+  static int bottomIndex = 0;
 }

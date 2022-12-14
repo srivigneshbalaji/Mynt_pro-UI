@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:mynt_pro/web_socket/market_depth.dart';
 import 'package:mynt_pro/web_socket/websocket_connection.dart';
 import 'package:provider/provider.dart';
+import '../../../../api/api_links.dart';
 import '../../../../constant/constants.dart';
 import '../../../../model/models.dart';
 import '../../../../constant/snackbar.dart';
@@ -46,24 +49,29 @@ class _WatchListInfoState extends State<WatchListInfo> {
   bool sellActive = false;
   final MySnackBars sb = MySnackBars();
   @override
+  void initState() {
+    scriptInfo(exchange, token);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Consumer(builder: (context, ThemeModel themeNotifier, child) {
       var buyPrice;
-      var price;
+      double price = 0;
       var che;
       var pChange;
 
       String token = marketDepth.token as String;
       String symbolName = "";
+      String lastPrice = "";
       return WillPopScope(
         onWillPop: () async {
           Map watchlistDepth = {"exch": exchange.toString(), "token": token};
           WebSocketConnection.estcon("ud", watchlistDepth, true);
           WebSocketConnection.estcon("t", WatchListModel.mWatchList, true);
 
-          // WebSocketConnection.estcon("ud", watchlistDepth, true);
-          // WebSocketConnection.estcon("t", WatchListModel.mWatchList, true);
           return true;
         },
         child: Scaffold(
@@ -100,13 +108,16 @@ class _WatchListInfoState extends State<WatchListInfo> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue),
-                        child: Text("BUY"),
-                        onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (context) => BuyOrder(
+                        child: const Text("BUY"),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => BuyOrder(
                                     scriptName: scriptName,
                                     exch: exchange,
-                                    tok: token))),
+                                    tok: token,
+                                    lastPrice: price,
+                                  )));
+                        },
                       )),
                   SizedBox(
                       width: 150,
@@ -114,11 +125,16 @@ class _WatchListInfoState extends State<WatchListInfo> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red),
-                        child: Text("SELL"),
-                        onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (context) => SellOrder(
-                                    scriptName: scriptName, exch: exchange))),
+                        child: const Text("SELL"),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => SellOrder(
+                                    scriptName: scriptName,
+                                    exch: exchange,
+                                    tok: token,
+                                    lastPrice: price,
+                                  )));
+                        },
                       ))
                 ],
               ),
@@ -133,260 +149,254 @@ class _WatchListInfoState extends State<WatchListInfo> {
                 builder: (_,
                     AsyncSnapshot<DepthAckWSResponse> snapshotAcknowledgement) {
                   marketDepth.change = "0.00";
-                  if (snapshotAcknowledgement.connectionState ==
-                      ConnectionState.waiting) {
+                  if (snapshotAcknowledgement.data == null) {
                     return const Center(
                       child: CircularProgressIndicator(),
                     );
                   }
 
-                  if (snapshotAcknowledgement.connectionState ==
-                          ConnectionState.active &&
-                      snapshotAcknowledgement.hasData) {
-                    if (snapshotAcknowledgement.data != null) {
-                      if (snapshotAcknowledgement.data!.tk ==
-                          marketDepth.token) {
-                        WebSocketConnection.datacontroller
-                            .add(snapshotAcknowledgement.data);
-                        marketDepth.symbolname =
-                            snapshotAcknowledgement.data!.ts == null ||
-                                    snapshotAcknowledgement.data!.ts! == 'null'
-                                ? marketDepth.symbolname
-                                : snapshotAcknowledgement.data!.ts!;
-                        symbolName =
-                            marketDepth.symbolname!.replaceAll("-EQ", "");
-                        marketDepth.exc =
-                            snapshotAcknowledgement.data!.e == null ||
-                                    snapshotAcknowledgement.data!.e! == 'null'
-                                ? marketDepth.exc
-                                : snapshotAcknowledgement.data!.e!;
-                        marketDepth.close =
-                            snapshotAcknowledgement.data!.c == null ||
-                                    snapshotAcknowledgement.data!.c! == 'null'
-                                ? marketDepth.close
-                                : snapshotAcknowledgement.data!.c!;
-                        marketDepth.open =
-                            snapshotAcknowledgement.data!.o == null ||
-                                    snapshotAcknowledgement.data!.o! == 'null'
-                                ? marketDepth.open
-                                : snapshotAcknowledgement.data!.o!;
-                        marketDepth.high =
-                            snapshotAcknowledgement.data!.h == null ||
-                                    snapshotAcknowledgement.data!.h! == 'null'
-                                ? marketDepth.high
-                                : snapshotAcknowledgement.data!.h!;
-                        marketDepth.low =
-                            snapshotAcknowledgement.data!.l == null ||
-                                    snapshotAcknowledgement.data!.l! == 'null'
-                                ? marketDepth.low
-                                : snapshotAcknowledgement.data!.l!;
-                        marketDepth.bQty1 =
-                            snapshotAcknowledgement.data!.bq1 == null ||
-                                    snapshotAcknowledgement.data!.bq1! == 'null'
-                                ? marketDepth.bQty1
-                                : snapshotAcknowledgement.data!.bq1!;
-                        marketDepth.bQty2 =
-                            snapshotAcknowledgement.data!.bq2 == null ||
-                                    snapshotAcknowledgement.data!.bq2! == 'null'
-                                ? marketDepth.bQty2
-                                : snapshotAcknowledgement.data!.bq2!;
-                        marketDepth.bQty3 =
-                            snapshotAcknowledgement.data!.bq3 == null ||
-                                    snapshotAcknowledgement.data!.bq3! == 'null'
-                                ? marketDepth.bQty3
-                                : snapshotAcknowledgement.data!.bq3!;
-                        marketDepth.bQty4 =
-                            snapshotAcknowledgement.data!.bq4 == null ||
-                                    snapshotAcknowledgement.data!.bq4! == 'null'
-                                ? marketDepth.bQty4
-                                : snapshotAcknowledgement.data!.bq4!;
-                        marketDepth.bQty5 =
-                            snapshotAcknowledgement.data!.bq5 == null ||
-                                    snapshotAcknowledgement.data!.bq5! == 'null'
-                                ? marketDepth.bQty5
-                                : snapshotAcknowledgement.data!.bq5!;
+                  if (snapshotAcknowledgement.data != null) {
+                    if (snapshotAcknowledgement.data!.tk == marketDepth.token) {
+                      WebSocketConnection.datacontroller
+                          .add(snapshotAcknowledgement.data);
+                      marketDepth.symbolname =
+                          snapshotAcknowledgement.data!.ts == null ||
+                                  snapshotAcknowledgement.data!.ts! == 'null'
+                              ? marketDepth.symbolname
+                              : snapshotAcknowledgement.data!.ts!;
+                      symbolName =
+                          marketDepth.symbolname!.replaceAll("-EQ", "");
+                      marketDepth.exc =
+                          snapshotAcknowledgement.data!.e == null ||
+                                  snapshotAcknowledgement.data!.e! == 'null'
+                              ? marketDepth.exc
+                              : snapshotAcknowledgement.data!.e!;
+                      marketDepth.close =
+                          snapshotAcknowledgement.data!.c == null ||
+                                  snapshotAcknowledgement.data!.c! == 'null'
+                              ? marketDepth.close
+                              : snapshotAcknowledgement.data!.c!;
+                      marketDepth.open =
+                          snapshotAcknowledgement.data!.o == null ||
+                                  snapshotAcknowledgement.data!.o! == 'null'
+                              ? marketDepth.open
+                              : snapshotAcknowledgement.data!.o!;
+                      marketDepth.high =
+                          snapshotAcknowledgement.data!.h == null ||
+                                  snapshotAcknowledgement.data!.h! == 'null'
+                              ? marketDepth.high
+                              : snapshotAcknowledgement.data!.h!;
+                      marketDepth.low =
+                          snapshotAcknowledgement.data!.l == null ||
+                                  snapshotAcknowledgement.data!.l! == 'null'
+                              ? marketDepth.low
+                              : snapshotAcknowledgement.data!.l!;
+                      marketDepth.bQty1 =
+                          snapshotAcknowledgement.data!.bq1 == null ||
+                                  snapshotAcknowledgement.data!.bq1! == 'null'
+                              ? marketDepth.bQty1
+                              : snapshotAcknowledgement.data!.bq1!;
+                      marketDepth.bQty2 =
+                          snapshotAcknowledgement.data!.bq2 == null ||
+                                  snapshotAcknowledgement.data!.bq2! == 'null'
+                              ? marketDepth.bQty2
+                              : snapshotAcknowledgement.data!.bq2!;
+                      marketDepth.bQty3 =
+                          snapshotAcknowledgement.data!.bq3 == null ||
+                                  snapshotAcknowledgement.data!.bq3! == 'null'
+                              ? marketDepth.bQty3
+                              : snapshotAcknowledgement.data!.bq3!;
+                      marketDepth.bQty4 =
+                          snapshotAcknowledgement.data!.bq4 == null ||
+                                  snapshotAcknowledgement.data!.bq4! == 'null'
+                              ? marketDepth.bQty4
+                              : snapshotAcknowledgement.data!.bq4!;
+                      marketDepth.bQty5 =
+                          snapshotAcknowledgement.data!.bq5 == null ||
+                                  snapshotAcknowledgement.data!.bq5! == 'null'
+                              ? marketDepth.bQty5
+                              : snapshotAcknowledgement.data!.bq5!;
 
-                        marketDepth.sQty1 =
-                            snapshotAcknowledgement.data!.sq1 == null ||
-                                    snapshotAcknowledgement.data!.sq1! == 'null'
-                                ? marketDepth.sQty1
-                                : snapshotAcknowledgement.data!.sq1!;
-                        marketDepth.sQty2 =
-                            snapshotAcknowledgement.data!.sq2 == null ||
-                                    snapshotAcknowledgement.data!.sq2! == 'null'
-                                ? marketDepth.sQty2
-                                : snapshotAcknowledgement.data!.sq2!;
-                        marketDepth.sQty3 =
-                            snapshotAcknowledgement.data!.sq3 == null ||
-                                    snapshotAcknowledgement.data!.sq3! == 'null'
-                                ? marketDepth.sQty3
-                                : snapshotAcknowledgement.data!.sq3!;
-                        marketDepth.sQty4 =
-                            snapshotAcknowledgement.data!.sq4 == null ||
-                                    snapshotAcknowledgement.data!.sq4! == 'null'
-                                ? marketDepth.sQty4
-                                : snapshotAcknowledgement.data!.sq4!;
-                        marketDepth.sQty5 =
-                            snapshotAcknowledgement.data!.sq5 == null ||
-                                    snapshotAcknowledgement.data!.sq5! == 'null'
-                                ? marketDepth.sQty5
-                                : snapshotAcknowledgement.data!.sq5!;
+                      marketDepth.sQty1 =
+                          snapshotAcknowledgement.data!.sq1 == null ||
+                                  snapshotAcknowledgement.data!.sq1! == 'null'
+                              ? marketDepth.sQty1
+                              : snapshotAcknowledgement.data!.sq1!;
+                      marketDepth.sQty2 =
+                          snapshotAcknowledgement.data!.sq2 == null ||
+                                  snapshotAcknowledgement.data!.sq2! == 'null'
+                              ? marketDepth.sQty2
+                              : snapshotAcknowledgement.data!.sq2!;
+                      marketDepth.sQty3 =
+                          snapshotAcknowledgement.data!.sq3 == null ||
+                                  snapshotAcknowledgement.data!.sq3! == 'null'
+                              ? marketDepth.sQty3
+                              : snapshotAcknowledgement.data!.sq3!;
+                      marketDepth.sQty4 =
+                          snapshotAcknowledgement.data!.sq4 == null ||
+                                  snapshotAcknowledgement.data!.sq4! == 'null'
+                              ? marketDepth.sQty4
+                              : snapshotAcknowledgement.data!.sq4!;
+                      marketDepth.sQty5 =
+                          snapshotAcknowledgement.data!.sq5 == null ||
+                                  snapshotAcknowledgement.data!.sq5! == 'null'
+                              ? marketDepth.sQty5
+                              : snapshotAcknowledgement.data!.sq5!;
 
-                        marketDepth.bOrders1 =
-                            snapshotAcknowledgement.data!.bo1 == null ||
-                                    snapshotAcknowledgement.data!.bo1! == 'null'
-                                ? marketDepth.bOrders1
-                                : snapshotAcknowledgement.data!.bo1!;
-                        marketDepth.bOrders2 =
-                            snapshotAcknowledgement.data!.bo2 == null ||
-                                    snapshotAcknowledgement.data!.bo2! == 'null'
-                                ? marketDepth.bOrders2
-                                : snapshotAcknowledgement.data!.bo2!;
-                        marketDepth.bOrders3 =
-                            snapshotAcknowledgement.data!.bo3 == null ||
-                                    snapshotAcknowledgement.data!.bo3! == 'null'
-                                ? marketDepth.bOrders3
-                                : snapshotAcknowledgement.data!.bo3!;
-                        marketDepth.bOrders4 =
-                            snapshotAcknowledgement.data!.bo4 == null ||
-                                    snapshotAcknowledgement.data!.bo4! == 'null'
-                                ? marketDepth.bOrders4
-                                : snapshotAcknowledgement.data!.bo4!;
-                        marketDepth.bOrders5 =
-                            snapshotAcknowledgement.data!.bo5 == null ||
-                                    snapshotAcknowledgement.data!.bo5! == 'null'
-                                ? marketDepth.bOrders5
-                                : snapshotAcknowledgement.data!.bo5!;
-                        marketDepth.sOrders1 =
-                            snapshotAcknowledgement.data!.so1 == null ||
-                                    snapshotAcknowledgement.data!.so1! == 'null'
-                                ? marketDepth.sOrders1
-                                : snapshotAcknowledgement.data!.so1!;
-                        marketDepth.sOrders2 =
-                            snapshotAcknowledgement.data!.so2 == null ||
-                                    snapshotAcknowledgement.data!.so2! == 'null'
-                                ? marketDepth.sOrders2
-                                : snapshotAcknowledgement.data!.so2!;
-                        marketDepth.sOrders3 =
-                            snapshotAcknowledgement.data!.so3 == null ||
-                                    snapshotAcknowledgement.data!.so3! == 'null'
-                                ? marketDepth.sOrders3
-                                : snapshotAcknowledgement.data!.so3!;
-                        marketDepth.sOrders4 =
-                            snapshotAcknowledgement.data!.so4 == null ||
-                                    snapshotAcknowledgement.data!.so4! == 'null'
-                                ? marketDepth.sOrders4
-                                : snapshotAcknowledgement.data!.so4!;
-                        marketDepth.sOrders5 =
-                            snapshotAcknowledgement.data!.so5 == null ||
-                                    snapshotAcknowledgement.data!.so5! == 'null'
-                                ? marketDepth.sOrders5
-                                : snapshotAcknowledgement.data!.so5!;
+                      marketDepth.bOrders1 =
+                          snapshotAcknowledgement.data!.bo1 == null ||
+                                  snapshotAcknowledgement.data!.bo1! == 'null'
+                              ? marketDepth.bOrders1
+                              : snapshotAcknowledgement.data!.bo1!;
+                      marketDepth.bOrders2 =
+                          snapshotAcknowledgement.data!.bo2 == null ||
+                                  snapshotAcknowledgement.data!.bo2! == 'null'
+                              ? marketDepth.bOrders2
+                              : snapshotAcknowledgement.data!.bo2!;
+                      marketDepth.bOrders3 =
+                          snapshotAcknowledgement.data!.bo3 == null ||
+                                  snapshotAcknowledgement.data!.bo3! == 'null'
+                              ? marketDepth.bOrders3
+                              : snapshotAcknowledgement.data!.bo3!;
+                      marketDepth.bOrders4 =
+                          snapshotAcknowledgement.data!.bo4 == null ||
+                                  snapshotAcknowledgement.data!.bo4! == 'null'
+                              ? marketDepth.bOrders4
+                              : snapshotAcknowledgement.data!.bo4!;
+                      marketDepth.bOrders5 =
+                          snapshotAcknowledgement.data!.bo5 == null ||
+                                  snapshotAcknowledgement.data!.bo5! == 'null'
+                              ? marketDepth.bOrders5
+                              : snapshotAcknowledgement.data!.bo5!;
+                      marketDepth.sOrders1 =
+                          snapshotAcknowledgement.data!.so1 == null ||
+                                  snapshotAcknowledgement.data!.so1! == 'null'
+                              ? marketDepth.sOrders1
+                              : snapshotAcknowledgement.data!.so1!;
+                      marketDepth.sOrders2 =
+                          snapshotAcknowledgement.data!.so2 == null ||
+                                  snapshotAcknowledgement.data!.so2! == 'null'
+                              ? marketDepth.sOrders2
+                              : snapshotAcknowledgement.data!.so2!;
+                      marketDepth.sOrders3 =
+                          snapshotAcknowledgement.data!.so3 == null ||
+                                  snapshotAcknowledgement.data!.so3! == 'null'
+                              ? marketDepth.sOrders3
+                              : snapshotAcknowledgement.data!.so3!;
+                      marketDepth.sOrders4 =
+                          snapshotAcknowledgement.data!.so4 == null ||
+                                  snapshotAcknowledgement.data!.so4! == 'null'
+                              ? marketDepth.sOrders4
+                              : snapshotAcknowledgement.data!.so4!;
+                      marketDepth.sOrders5 =
+                          snapshotAcknowledgement.data!.so5 == null ||
+                                  snapshotAcknowledgement.data!.so5! == 'null'
+                              ? marketDepth.sOrders5
+                              : snapshotAcknowledgement.data!.so5!;
 
-                        marketDepth.bPrice1 =
-                            snapshotAcknowledgement.data!.bp1 == null ||
-                                    snapshotAcknowledgement.data!.bp1! == 'null'
-                                ? marketDepth.bPrice1
-                                : snapshotAcknowledgement.data!.bp1!;
-                        marketDepth.bPrice2 =
-                            snapshotAcknowledgement.data!.bp2 == null ||
-                                    snapshotAcknowledgement.data!.bp2! == 'null'
-                                ? marketDepth.bPrice2
-                                : snapshotAcknowledgement.data!.bp2!;
-                        marketDepth.bPrice3 =
-                            snapshotAcknowledgement.data!.bp3 == null ||
-                                    snapshotAcknowledgement.data!.bp3! == 'null'
-                                ? marketDepth.bPrice3
-                                : snapshotAcknowledgement.data!.bp3!;
-                        marketDepth.bPrice4 =
-                            snapshotAcknowledgement.data!.bp4 == null ||
-                                    snapshotAcknowledgement.data!.bp4! == 'null'
-                                ? marketDepth.bPrice4
-                                : snapshotAcknowledgement.data!.bp4!;
-                        marketDepth.bPrice5 =
-                            snapshotAcknowledgement.data!.bp5 == null ||
-                                    snapshotAcknowledgement.data!.bp5! == 'null'
-                                ? marketDepth.bPrice5
-                                : snapshotAcknowledgement.data!.bp5!;
+                      marketDepth.bPrice1 =
+                          snapshotAcknowledgement.data!.bp1 == null ||
+                                  snapshotAcknowledgement.data!.bp1! == 'null'
+                              ? marketDepth.bPrice1
+                              : snapshotAcknowledgement.data!.bp1!;
+                      marketDepth.bPrice2 =
+                          snapshotAcknowledgement.data!.bp2 == null ||
+                                  snapshotAcknowledgement.data!.bp2! == 'null'
+                              ? marketDepth.bPrice2
+                              : snapshotAcknowledgement.data!.bp2!;
+                      marketDepth.bPrice3 =
+                          snapshotAcknowledgement.data!.bp3 == null ||
+                                  snapshotAcknowledgement.data!.bp3! == 'null'
+                              ? marketDepth.bPrice3
+                              : snapshotAcknowledgement.data!.bp3!;
+                      marketDepth.bPrice4 =
+                          snapshotAcknowledgement.data!.bp4 == null ||
+                                  snapshotAcknowledgement.data!.bp4! == 'null'
+                              ? marketDepth.bPrice4
+                              : snapshotAcknowledgement.data!.bp4!;
+                      marketDepth.bPrice5 =
+                          snapshotAcknowledgement.data!.bp5 == null ||
+                                  snapshotAcknowledgement.data!.bp5! == 'null'
+                              ? marketDepth.bPrice5
+                              : snapshotAcknowledgement.data!.bp5!;
 
-                        marketDepth.sPrice1 =
-                            snapshotAcknowledgement.data!.sp1 == null ||
-                                    snapshotAcknowledgement.data!.sp1! == 'null'
-                                ? marketDepth.sPrice1
-                                : snapshotAcknowledgement.data!.sp1!;
-                        marketDepth.sPrice2 =
-                            snapshotAcknowledgement.data!.sp2 == null ||
-                                    snapshotAcknowledgement.data!.sp2! == 'null'
-                                ? marketDepth.sPrice2
-                                : snapshotAcknowledgement.data!.sp2!;
-                        marketDepth.sPrice3 =
-                            snapshotAcknowledgement.data!.sp3 == null ||
-                                    snapshotAcknowledgement.data!.sp3! == 'null'
-                                ? marketDepth.sPrice3
-                                : snapshotAcknowledgement.data!.sp3!;
-                        marketDepth.sPrice4 =
-                            snapshotAcknowledgement.data!.sp4 == null ||
-                                    snapshotAcknowledgement.data!.sp4! == 'null'
-                                ? marketDepth.sPrice4
-                                : snapshotAcknowledgement.data!.sp4!;
-                        marketDepth.sPrice5 =
-                            snapshotAcknowledgement.data!.sp5 == null ||
-                                    snapshotAcknowledgement.data!.sp5! == 'null'
-                                ? marketDepth.sPrice5
-                                : snapshotAcknowledgement.data!.sp5!;
-                        marketDepth.averagePrice =
-                            snapshotAcknowledgement.data!.ap == null ||
-                                    snapshotAcknowledgement.data!.ap! == 'null'
-                                ? marketDepth.averagePrice
-                                : snapshotAcknowledgement.data!.ap!;
-                        marketDepth.volume =
-                            snapshotAcknowledgement.data!.v == null ||
-                                    snapshotAcknowledgement.data!.v! == 'null'
-                                ? marketDepth.volume
-                                : snapshotAcknowledgement.data!.v!;
-                        marketDepth.lasttradedtime =
-                            snapshotAcknowledgement.data!.ltt == null ||
-                                    snapshotAcknowledgement.data!.ltt! == 'null'
-                                ? marketDepth.lasttradedtime
-                                : snapshotAcknowledgement.data!.ltt!;
-                        marketDepth.lowercircuitlimit =
-                            snapshotAcknowledgement.data!.lc == null ||
-                                    snapshotAcknowledgement.data!.lc! == 'null'
-                                ? marketDepth.lowercircuitlimit
-                                : snapshotAcknowledgement.data!.lc!;
-                        marketDepth.highercircuitlimit =
-                            snapshotAcknowledgement.data!.uc == null ||
-                                    snapshotAcknowledgement.data!.uc! == 'null'
-                                ? marketDepth.highercircuitlimit
-                                : snapshotAcknowledgement.data!.uc!;
-                        marketDepth.lasttradedqty =
-                            snapshotAcknowledgement.data!.ltq == null ||
-                                    snapshotAcknowledgement.data!.ltq! == 'null'
-                                ? marketDepth.lasttradedqty
-                                : snapshotAcknowledgement.data!.ltq!;
-                        marketDepth.ltp =
-                            snapshotAcknowledgement.data!.lp == null ||
-                                    snapshotAcknowledgement.data!.lp! == 'null'
-                                ? marketDepth.ltp
-                                : snapshotAcknowledgement.data!.lp!;
-                        price = double.parse(marketDepth.ltp!);
-                        marketDepth.perChange =
-                            snapshotAcknowledgement.data!.pc == null ||
-                                    snapshotAcknowledgement.data!.pc! == 'null'
-                                ? marketDepth.perChange
-                                : snapshotAcknowledgement.data!.pc!;
-                        marketDepth.change = marketDepth.change == null
-                            ? marketDepth.change
-                            : (double.parse(marketDepth.ltp!) -
-                                    double.parse(marketDepth.close!))
-                                .toStringAsFixed(2);
-                        buyPrice = (double.parse(marketDepth.ltp!));
+                      marketDepth.sPrice1 =
+                          snapshotAcknowledgement.data!.sp1 == null ||
+                                  snapshotAcknowledgement.data!.sp1! == 'null'
+                              ? marketDepth.sPrice1
+                              : snapshotAcknowledgement.data!.sp1!;
+                      marketDepth.sPrice2 =
+                          snapshotAcknowledgement.data!.sp2 == null ||
+                                  snapshotAcknowledgement.data!.sp2! == 'null'
+                              ? marketDepth.sPrice2
+                              : snapshotAcknowledgement.data!.sp2!;
+                      marketDepth.sPrice3 =
+                          snapshotAcknowledgement.data!.sp3 == null ||
+                                  snapshotAcknowledgement.data!.sp3! == 'null'
+                              ? marketDepth.sPrice3
+                              : snapshotAcknowledgement.data!.sp3!;
+                      marketDepth.sPrice4 =
+                          snapshotAcknowledgement.data!.sp4 == null ||
+                                  snapshotAcknowledgement.data!.sp4! == 'null'
+                              ? marketDepth.sPrice4
+                              : snapshotAcknowledgement.data!.sp4!;
+                      marketDepth.sPrice5 =
+                          snapshotAcknowledgement.data!.sp5 == null ||
+                                  snapshotAcknowledgement.data!.sp5! == 'null'
+                              ? marketDepth.sPrice5
+                              : snapshotAcknowledgement.data!.sp5!;
+                      marketDepth.averagePrice =
+                          snapshotAcknowledgement.data!.ap == null ||
+                                  snapshotAcknowledgement.data!.ap! == 'null'
+                              ? marketDepth.averagePrice
+                              : snapshotAcknowledgement.data!.ap!;
+                      marketDepth.volume =
+                          snapshotAcknowledgement.data!.v == null ||
+                                  snapshotAcknowledgement.data!.v! == 'null'
+                              ? marketDepth.volume
+                              : snapshotAcknowledgement.data!.v!;
+                      marketDepth.lasttradedtime =
+                          snapshotAcknowledgement.data!.ltt == null ||
+                                  snapshotAcknowledgement.data!.ltt! == 'null'
+                              ? marketDepth.lasttradedtime
+                              : snapshotAcknowledgement.data!.ltt!;
+                      marketDepth.lowercircuitlimit =
+                          snapshotAcknowledgement.data!.lc == null ||
+                                  snapshotAcknowledgement.data!.lc! == 'null'
+                              ? marketDepth.lowercircuitlimit
+                              : snapshotAcknowledgement.data!.lc!;
+                      marketDepth.highercircuitlimit =
+                          snapshotAcknowledgement.data!.uc == null ||
+                                  snapshotAcknowledgement.data!.uc! == 'null'
+                              ? marketDepth.highercircuitlimit
+                              : snapshotAcknowledgement.data!.uc!;
+                      marketDepth.lasttradedqty =
+                          snapshotAcknowledgement.data!.ltq == null ||
+                                  snapshotAcknowledgement.data!.ltq! == 'null'
+                              ? marketDepth.lasttradedqty
+                              : snapshotAcknowledgement.data!.ltq!;
+                      marketDepth.ltp =
+                          snapshotAcknowledgement.data!.lp == null ||
+                                  snapshotAcknowledgement.data!.lp! == 'null'
+                              ? marketDepth.ltp
+                              : snapshotAcknowledgement.data!.lp!;
+                      price = double.parse(marketDepth.ltp!);
+                      marketDepth.perChange =
+                          snapshotAcknowledgement.data!.pc == null ||
+                                  snapshotAcknowledgement.data!.pc! == 'null'
+                              ? marketDepth.perChange
+                              : snapshotAcknowledgement.data!.pc!;
+                      marketDepth.change = marketDepth.change == null
+                          ? marketDepth.change
+                          : (double.parse(marketDepth.ltp!) -
+                                  double.parse(marketDepth.close!))
+                              .toStringAsFixed(2);
+                      buyPrice = (double.parse(marketDepth.ltp!));
 
-                        pChange = num.tryParse("${marketDepth.perChange}")
-                            ?.toDouble();
+                      pChange =
+                          num.tryParse("${marketDepth.perChange}")?.toDouble();
 
-                        che = num.tryParse("${marketDepth.change}")?.toDouble();
-                      }
+                      che = num.tryParse("${marketDepth.change}")?.toDouble();
                     }
                   }
 
@@ -856,72 +866,32 @@ class _WatchListInfoState extends State<WatchListInfo> {
     );
   }
 
-//   Future scriptInfo(exchange, token) async {
-//     try {
-//       http.Response response = await http.post(Uri.parse(ApiLinks.getQuotes),
-//           headers: <String, String>{
-//             'Content-Type': 'application/json',
-//           },
-//           body:
-//               '''jData={"uid":"${ConstVariable.userId}","exch":"$exchange","token":"$token"}&jKey=${ConstVariable.sessionId}''');
+  Future scriptInfo(exchange, token) async {
+    try {
+      http.Response response = await http.post(Uri.parse(ApiLinks.secInfo),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body:
+              '''jData={"uid":"${ConstVariable.userId}","exch":"$exchange","token":"$token"}&jKey=${ConstVariable.sessionId}''');
+      setState(() {
+        ScriptInfoModel.scriptInfoRes = json.decode(response.body);
+      });
 
-//       setState(() {
-//         ScriptInfoModel.scriptInfoRes = json.decode(response.body);
-//       });
+      var stat = ScriptInfoModel.scriptInfoRes['stat'];
 
-//       var stat = ScriptInfoModel.scriptInfoRes['stat'];
-//       if (stat == "Ok") {
-//         setState(() {
-//           ScriptInfoModel.scriptName = ScriptInfoModel.scriptInfoRes['symname'];
-//           ScriptInfoModel.exchange = ScriptInfoModel.scriptInfoRes['exch'];
-//           ScriptInfoModel.pChange = ScriptInfoModel.scriptInfoRes['pp'];
-//           ScriptInfoModel.ltp = ScriptInfoModel.scriptInfoRes['lp'];
-//           ScriptInfoModel.bPrice1 = ScriptInfoModel.scriptInfoRes['bp1'];
-//           ScriptInfoModel.bPrice2 = ScriptInfoModel.scriptInfoRes['bp2'];
-//           ScriptInfoModel.bPrice3 = ScriptInfoModel.scriptInfoRes['bp3'];
-//           ScriptInfoModel.bPrice4 = ScriptInfoModel.scriptInfoRes['bp4'];
-//           ScriptInfoModel.bPrice5 = ScriptInfoModel.scriptInfoRes['bp5'];
-//           ScriptInfoModel.bOrder1 = ScriptInfoModel.scriptInfoRes['bo1'];
-//           ScriptInfoModel.bOrder2 = ScriptInfoModel.scriptInfoRes['bo2'];
-//           ScriptInfoModel.bOrder3 = ScriptInfoModel.scriptInfoRes['bo3'];
-//           ScriptInfoModel.bOrder4 = ScriptInfoModel.scriptInfoRes['bo4'];
-//           ScriptInfoModel.bOrder5 = ScriptInfoModel.scriptInfoRes['bo5'];
-//           ScriptInfoModel.bQty1 = ScriptInfoModel.scriptInfoRes['bq1'];
-//           ScriptInfoModel.bQty2 = ScriptInfoModel.scriptInfoRes['bq2'];
-//           ScriptInfoModel.bQty3 = ScriptInfoModel.scriptInfoRes['bq3'];
-//           ScriptInfoModel.bQty4 = ScriptInfoModel.scriptInfoRes['bq4'];
-//           ScriptInfoModel.bQty5 = ScriptInfoModel.scriptInfoRes['bq5'];
-//           ScriptInfoModel.sPrice1 = ScriptInfoModel.scriptInfoRes['sp1'];
-//           ScriptInfoModel.sPrice2 = ScriptInfoModel.scriptInfoRes['sp2'];
-//           ScriptInfoModel.sPrice3 = ScriptInfoModel.scriptInfoRes['sp3'];
-//           ScriptInfoModel.sPrice4 = ScriptInfoModel.scriptInfoRes['sp4'];
-//           ScriptInfoModel.sPrice5 = ScriptInfoModel.scriptInfoRes['sp5'];
-//           ScriptInfoModel.sOrder1 = ScriptInfoModel.scriptInfoRes['so1'];
-//           ScriptInfoModel.sOrder2 = ScriptInfoModel.scriptInfoRes['so2'];
-//           ScriptInfoModel.sOrder3 = ScriptInfoModel.scriptInfoRes['so3'];
-//           ScriptInfoModel.sOrder4 = ScriptInfoModel.scriptInfoRes['so4'];
-//           ScriptInfoModel.sOrder5 = ScriptInfoModel.scriptInfoRes['so5'];
-//           ScriptInfoModel.sQty1 = ScriptInfoModel.scriptInfoRes['sq1'];
-//           ScriptInfoModel.sQty2 = ScriptInfoModel.scriptInfoRes['sq2'];
-//           ScriptInfoModel.sQty3 = ScriptInfoModel.scriptInfoRes['sq3'];
-//           ScriptInfoModel.sQty4 = ScriptInfoModel.scriptInfoRes['sq4'];
-//           ScriptInfoModel.sQty5 = ScriptInfoModel.scriptInfoRes['sq5'];
-//           ScriptInfoModel.open = ScriptInfoModel.scriptInfoRes['o'];
-//           ScriptInfoModel.high = ScriptInfoModel.scriptInfoRes['h'];
-//           ScriptInfoModel.low = ScriptInfoModel.scriptInfoRes['l'];
-//           ScriptInfoModel.close = ScriptInfoModel.scriptInfoRes['c'];
-//           ScriptInfoModel.volume = ScriptInfoModel.scriptInfoRes['v'];
-//           ScriptInfoModel.avgPrice = ScriptInfoModel.scriptInfoRes['ap'];
-//           ScriptInfoModel.lTradeQty = ScriptInfoModel.scriptInfoRes['ltq'];
-//           ScriptInfoModel.lTradeTime = ScriptInfoModel.scriptInfoRes['ltt'];
-//           ScriptInfoModel.lowerCircuit = ScriptInfoModel.scriptInfoRes['lc'];
-//           ScriptInfoModel.upperCircuit = ScriptInfoModel.scriptInfoRes['uc'];
-//         });
-//       } else {
-//         ScaffoldMessenger.of(context)
-//             .showSnackBar(sb.unSuccessBar("Session Expired"));
-//       }
-//     } catch (e) {}
-//   }
-// }
+      if (stat == "Ok") {
+        setState(() {
+          ScriptInfoModel.segment = ScriptInfoModel.scriptInfoRes['seg'];
+          ScriptInfoModel.lotSize =
+              int.parse("${ScriptInfoModel.scriptInfoRes['ls']}");
+          ScriptInfoModel.frzQty = ScriptInfoModel.scriptInfoRes['frzqty'];
+          ScriptInfoModel.tikTik = ScriptInfoModel.scriptInfoRes['ti'];
+        });
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.unSuccessBar("Session Expired"));
+      }
+    } catch (e) {}
+  }
 }

@@ -55,6 +55,8 @@ dependencies:
   flutter_screen_lock: ^9.0.0+1
   local_auth: ^2.1.2
   web_socket_channel: ^2.2.0
+  internet_connection_checker: ^1.0.0+1
+  connectivity_plus: ^3.0.2
   # imei_plugin: ^1.2.0
   # device_imei: ^0.0.2
 

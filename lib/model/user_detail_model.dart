@@ -4,4 +4,5 @@ class UserDetailModel {
   static String eMail = "";
   static List segment = [];
   static List product = [];
+  static List priceType = [];
 }

@@ -5,7 +5,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:device_information/device_information.dart';
-import 'package:mynt_pro/model/device_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../constant/constants.dart';
 import '../../../../model/models.dart';
@@ -33,9 +32,15 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   @override
   void initState() {
-    super.initState();
-
+    userName();
     requestPermission();
+
+    super.initState();
+  }
+
+  userName() async {
+    final prefs = await SharedPreferences.getInstance();
+    ConstVariable.userId = prefs.getString('userId')!;
   }
 
   Future<void> initPlatformState() async {
@@ -78,14 +83,15 @@ class _LogInState extends State<LogIn> {
   }
 
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
-  final userId = TextEditingController();
+
+  final userId = TextEditingController(text: ConstVariable.userId);
   final password = TextEditingController();
   final panNumber = TextEditingController();
   final MySnackBars sb = MySnackBars();
   @override
   void dispose() {
     userId.dispose();
-    password.dispose();
+    // password.dispose();
     super.dispose();
   }
 
@@ -125,9 +131,9 @@ class _LogInState extends State<LogIn> {
                           TextFormField(
                             // inputFormatters: [UpperCaseTextFormatter()],
                             textCapitalization: TextCapitalization.characters,
-                            autofocus: true,
                             style: listTitle(size),
                             controller: userId,
+                            autofocus: userId.text.isEmpty,
                             keyboardType: TextInputType.text,
                             onSaved: (value) async {
                               final prefs =
@@ -162,6 +168,7 @@ class _LogInState extends State<LogIn> {
                           TextFormField(
                             style: listTitle(size),
                             controller: password,
+                            autofocus: userId.text.isNotEmpty,
                             keyboardType: TextInputType.text,
                             obscureText: passHidden,
                             onChanged: (onChanged) {},

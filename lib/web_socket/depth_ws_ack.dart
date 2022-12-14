@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_nullable_for_final_variable_declarations
+
 class DepthAckWSResponse {
   String? t;
   String? e;

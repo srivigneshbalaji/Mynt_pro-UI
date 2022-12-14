@@ -31,6 +31,7 @@ Future userDetail({
       UserDetailModel.eMail = mapRes['email'];
       UserDetailModel.product = mapRes['prarr'];
       UserDetailModel.segment = mapRes['exarr'];
+      UserDetailModel.priceType = mapRes['orarr'];
     } else {
       Navigator.pushNamed(context, 'logIn');
       ScaffoldMessenger.of(context)

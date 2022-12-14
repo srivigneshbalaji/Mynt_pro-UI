@@ -24,8 +24,8 @@ class AppRouter {
         return Register.route();
       case Verification.routeName:
         return Verification.route();
-      // case EditWatchList.routeName:
-      //   return EditWatchList.route();
+      case OrderScreen.routeName:
+        return OrderScreen.route();
       case ChangeMPin.routeName:
         return ChangeMPin.route();
       case ChangePassword.routeName:

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:bubble_bottom_bar/bubble_bottom_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../constant/const_var.dart';
 import '../../model/index_list_model.dart';
 import '../../model/watchlist_model.dart';
 import '../../themes/theme_model.dart';
@@ -27,18 +28,18 @@ class MobileIndex extends StatefulWidget {
 }
 
 class _MobileIndexState extends State<MobileIndex> {
-  late int currentIndex;
-
   @override
   void initState() {
     super.initState();
-    currentIndex = 0;
+    // ConstVariable.bottomIndex = 0;
   }
 
   void changePage(int? index) {
     setState(() {
-      currentIndex = index!;
-      if (currentIndex == 1 || currentIndex == 2 || currentIndex == 3) {
+      ConstVariable.bottomIndex = index!;
+      if (ConstVariable.bottomIndex == 1 ||
+          ConstVariable.bottomIndex == 2 ||
+          ConstVariable.bottomIndex == 3) {
         WebSocketConnection.estcon("u", WatchListModel.mWatchList, true);
       }
     });
@@ -64,11 +65,11 @@ class _MobileIndexState extends State<MobileIndex> {
           appBar: MobileAppBar(
             indexLists: IndexListItem.indexDatas,
           ),
-          body: tabItems[currentIndex],
+          body: tabItems[ConstVariable.bottomIndex],
           bottomNavigationBar: BubbleBottomBar(
             backgroundColor: themeNotifier.isDark ? Colors.black : Colors.white,
             hasNotch: true,
-            currentIndex: currentIndex,
+            currentIndex: ConstVariable.bottomIndex,
             onTap: changePage,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(16),

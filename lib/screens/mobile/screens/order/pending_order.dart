@@ -111,7 +111,7 @@ class PendingOrder extends StatelessWidget {
                   },
                   itemCount: OrderBookModel.pendingOrderBook.length,
                   separatorBuilder: (BuildContext context, int index) {
-                    return Divider();
+                    return const Divider();
                   },
                 )
               : Center(

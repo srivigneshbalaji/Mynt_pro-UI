@@ -49,7 +49,6 @@ class QuickAuth {
         await prefs.setString('userId', ConstVariable.userId);
         await prefs.setString('actid', ConstVariable.accId);
         ConstVariable.sessionId = prefs.getString('userSession')!;
-        ConstVariable.userId = prefs.getString('userId')!;
         ConstVariable.accId = prefs.getString('actid')!;
 
         // marketWatchList(context: context, selectedIndex: 1);

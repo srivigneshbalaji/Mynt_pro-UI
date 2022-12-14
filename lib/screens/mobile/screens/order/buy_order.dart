@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -6,42 +7,40 @@ import 'package:mynt_pro/constant/constants.dart';
 import 'package:provider/provider.dart';
 import '../../../../api/api_links.dart';
 import '../../../../constant/const_var.dart';
-import '../../../../functions/script_info_fun.dart';
+import '../../../../constant/snackbar.dart';
 import '../../../../model/script_info_model.dart';
+import '../../../../model/user_detail_model.dart';
 import '../../../../themes/theme_model.dart';
 
 class BuyOrder extends StatefulWidget {
   String exch;
   String scriptName;
   String tok;
-  BuyOrder(
-      {super.key,
-      required this.exch,
-      required this.scriptName,
-      required this.tok});
+  double lastPrice;
+  BuyOrder({
+    super.key,
+    required this.exch,
+    required this.scriptName,
+    required this.tok,
+    required this.lastPrice,
+  });
 
   @override
-  State<BuyOrder> createState() => _BuyOrderState(exch, scriptName, tok);
+  State<BuyOrder> createState() =>
+      _BuyOrderState(exch, scriptName, tok, lastPrice);
 }
 
 class _BuyOrderState extends State<BuyOrder> {
-  @override
-  void initState() {
-    scriptInfo(exch, tok);
-    super.initState();
-  }
-
-  String segment = "";
   bool isChecked = false;
-  final diskQty = TextEditingController();
-  final qTy = TextEditingController();
-  final price = TextEditingController();
-  final stopLoss = TextEditingController();
-  final target = TextEditingController();
-  final trailingStoploss = TextEditingController();
-  final mktProt = TextEditingController();
-  final trigger = TextEditingController();
-  final triggerPrice = TextEditingController();
+  final MySnackBars sb = MySnackBars();
+  bool activeTxtField = false;
+  // final diskQty = TextEditingController(text: "0.00");
+  // final stopLoss = TextEditingController(text: "0.00");
+  // final target = TextEditingController(text: "0.00");
+  // final trailingStoploss = TextEditingController(text: "0.00");
+  // final mktProt = TextEditingController(text: "0.00");
+  // final trigger = TextEditingController(text: "0.00");
+  // final triggerPrice = TextEditingController(text: "0.00");
   List<bool> eqtProductBtn = [true, false, false, false, false];
   List<bool> futProductBtn = [true, false, false, false];
   List<bool> priceTypeBtn = [true, false, false, false];
@@ -53,379 +52,448 @@ class _BuyOrderState extends State<BuyOrder> {
   String exch;
   String scriptName;
   String tok;
-  _BuyOrderState(this.exch, this.scriptName, this.tok);
+  double lastPrice;
+  double changePrice = 0.00;
+  double diskQty = 0.00;
+  int quantity = 0;
+  double target = 0.00;
+  double trigger = 0.00;
+  double trailingStoploss = 0.00;
+  double triggerPrice = 0.00;
+  int mktProt = 0;
+  double stopLoss = 0.00;
+  _BuyOrderState(this.exch, this.scriptName, this.tok, this.lastPrice);
+  String product = ScriptInfoModel.segment == "EQT"
+      ? "${UserDetailModel.product[5]['prd']}"
+      : "${UserDetailModel.product[3]['prd']}";
+  String priceTyp = UserDetailModel.priceType[0];
+
   @override
   Widget build(BuildContext context) {
+    // var ltp = lastPrice;
+    // final qTy =
+    //     TextEditingController(text: "${ScriptInfoModel.scriptInfoRes['ls']}");
+    // final price = TextEditingController(text: "$lastPrice");
+
     var size = MediaQuery.of(context).size;
     return Consumer(builder: (context, ThemeModel themeNotifier, child) {
-      return GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            elevation: 1,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildTitleText(scriptName, size),
-                Text(
-                  exch,
-                  style: listSubTitle(size),
-                )
-              ],
-            ),
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          elevation: 1,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildTitleText(scriptName, size),
+              Text(
+                exch,
+                style: listSubTitle(size),
+              )
+            ],
           ),
-          body: SafeArea(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        buildTitleText("Product", size),
-                        sizedHeight(size * .1),
-                        SizedBox(
-                          height: 30,
-                          child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: segment == "EQT"
-                                  ? eqtProductBtns(size)
-                                  : futProductBtns(size)),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "$lastPrice",
+                style: listTitle(size),
+              ),
+            )
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    children: [
+                      buildTitleText("Product", size),
+                      sizedHeight(size * .1),
+                      SizedBox(
+                        height: 30,
+                        child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: ScriptInfoModel.segment == "EQT"
+                                ? eqtProductBtns(size)
+                                : futProductBtns(size)),
+                      ),
+                      sizedHeight(size * .3),
+                      const Divider(),
+                      sizedHeight(size * .1),
+                      buildTitleText("Price Type", size),
+                      sizedHeight(size * .1),
+                      SizedBox(
+                        height: 30,
+                        child: Row(
+                          children: priceTypeBtns(size),
                         ),
-                        sizedHeight(size * .3),
-                        const Divider(),
-                        sizedHeight(size * .1),
-                        buildTitleText("Price Type", size),
-                        sizedHeight(size * .1),
-                        SizedBox(
-                          height: 30,
-                          child: Row(
-                            children: priceTypeBtns(size),
-                          ),
-                        ),
-                        sizedHeight(size * .3),
-                        const Divider(),
-                        sizedHeight(size * .1),
-                        segment == "EQT"
-                            ? Column(
-                                children: [
-                                  // CNC || MIS || MTF && LIMIT
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[0] && priceTypeBtn[0],
-                                    child: cncLimit(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[1] && priceTypeBtn[0],
-                                    child: cncLimit(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[2] && priceTypeBtn[0],
-                                    child: cncLimit(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[0] && priceTypeBtn[1],
-                                    child: cncMarket(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[1] && priceTypeBtn[1],
-                                    child: cncMarket(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[2] && priceTypeBtn[1],
-                                    child: cncMarket(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[0] && priceTypeBtn[2],
-                                    child: cncSl(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[1] && priceTypeBtn[2],
-                                    child: cncSl(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[2] && priceTypeBtn[2],
-                                    child: cncSl(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[0] && priceTypeBtn[3],
-                                    child: cncSlm(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[1] && priceTypeBtn[3],
-                                    child: cncSlm(size),
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        eqtProductBtn[2] && priceTypeBtn[3],
-                                    child: cncSlm(size),
-                                  ),
+                      ),
+                      sizedHeight(size * .3),
+                      const Divider(),
+                      sizedHeight(size * .1),
+                      ScriptInfoModel.segment == "EQT"
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // CNC || MIS || MTF && LIMIT
+                                Visibility(
+                                  visible: eqtProductBtn[0] && priceTypeBtn[0],
+                                  child: cncLimit(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[1] && priceTypeBtn[0],
+                                  child: cncLimit(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[2] && priceTypeBtn[0],
+                                  child: cncLimit(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[0] && priceTypeBtn[1],
+                                  child: cncMarket(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[1] && priceTypeBtn[1],
+                                  child: cncMarket(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[2] && priceTypeBtn[1],
+                                  child: cncMarket(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[0] && priceTypeBtn[2],
+                                  child: cncSl(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[1] && priceTypeBtn[2],
+                                  child: cncSl(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[2] && priceTypeBtn[2],
+                                  child: cncSl(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[0] && priceTypeBtn[3],
+                                  child: cncSlm(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[1] && priceTypeBtn[3],
+                                  child: cncSlm(size),
+                                ),
+                                Visibility(
+                                  visible: eqtProductBtn[2] && priceTypeBtn[3],
+                                  child: cncSlm(size),
+                                ),
 
-                                  // CO && LIMIT
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[3] && priceTypeBtn[0],
-                                      child: coLimit(size)),
-
-                                  // CO && MARKET
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[3] && priceTypeBtn[1],
-                                      child: coMarket(size)),
-
-                                  // CO && SL
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[3] && priceTypeBtn[2],
-                                      child: coSl(size)),
-
-                                  // BO && LIMIT
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[4] && priceTypeBtn[0],
-                                      child: boLimit(size)),
-
-                                  // BO && MARKET
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[4] && priceTypeBtn[1],
-                                      child: boMarket(size)),
-
-                                  //BO && SL
-                                  Visibility(
-                                      visible:
-                                          eqtProductBtn[4] && priceTypeBtn[2],
-                                      child: boSl(size)),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  // CNC || MIS || MTF && LIMIT
-                                  Visibility(
+                                // CO && LIMIT
+                                Visibility(
                                     visible:
-                                        futProductBtn[0] && priceTypeBtn[0],
-                                    child: cncLimit(size),
-                                  ),
-                                  Visibility(
+                                        eqtProductBtn[3] && priceTypeBtn[0],
+                                    child: coLimit(size)),
+
+                                // CO && MARKET
+                                Visibility(
                                     visible:
-                                        futProductBtn[1] && priceTypeBtn[0],
-                                    child: cncLimit(size),
-                                  ),
+                                        eqtProductBtn[3] && priceTypeBtn[1],
+                                    child: coMarket(size)),
 
-                                  Visibility(
+                                // CO && SL
+                                Visibility(
                                     visible:
-                                        futProductBtn[0] && priceTypeBtn[1],
-                                    child: cncMarket(size),
-                                  ),
-                                  Visibility(
+                                        eqtProductBtn[3] && priceTypeBtn[2],
+                                    child: coSl(size)),
+
+                                // BO && LIMIT
+                                Visibility(
                                     visible:
-                                        futProductBtn[1] && priceTypeBtn[1],
-                                    child: cncMarket(size),
-                                  ),
+                                        eqtProductBtn[4] && priceTypeBtn[0],
+                                    child: boLimit(size)),
 
-                                  Visibility(
+                                // BO && MARKET
+                                Visibility(
                                     visible:
-                                        futProductBtn[0] && priceTypeBtn[2],
-                                    child: cncSl(size),
-                                  ),
-                                  Visibility(
+                                        eqtProductBtn[4] && priceTypeBtn[1],
+                                    child: boMarket(size)),
+
+                                //BO && SL
+                                Visibility(
                                     visible:
-                                        futProductBtn[1] && priceTypeBtn[2],
-                                    child: cncSl(size),
-                                  ),
+                                        eqtProductBtn[4] && priceTypeBtn[2],
+                                    child: boSl(size)),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // CNC || MIS || MTF && LIMIT
+                                Visibility(
+                                  visible: futProductBtn[0] && priceTypeBtn[0],
+                                  child: cncLimit(size),
+                                ),
+                                Visibility(
+                                  visible: futProductBtn[1] && priceTypeBtn[0],
+                                  child: cncLimit(size),
+                                ),
 
-                                  Visibility(
+                                Visibility(
+                                  visible: futProductBtn[0] && priceTypeBtn[1],
+                                  child: cncMarket(size),
+                                ),
+                                Visibility(
+                                  visible: futProductBtn[1] && priceTypeBtn[1],
+                                  child: cncMarket(size),
+                                ),
+
+                                Visibility(
+                                  visible: futProductBtn[0] && priceTypeBtn[2],
+                                  child: cncSl(size),
+                                ),
+                                Visibility(
+                                  visible: futProductBtn[1] && priceTypeBtn[2],
+                                  child: cncSl(size),
+                                ),
+
+                                Visibility(
+                                  visible: futProductBtn[0] && priceTypeBtn[3],
+                                  child: cncSlm(size),
+                                ),
+                                Visibility(
+                                  visible: futProductBtn[1] && priceTypeBtn[3],
+                                  child: cncSlm(size),
+                                ),
+
+                                // CO && LIMIT
+                                Visibility(
                                     visible:
-                                        futProductBtn[0] && priceTypeBtn[3],
-                                    child: cncSlm(size),
-                                  ),
-                                  Visibility(
+                                        futProductBtn[2] && priceTypeBtn[0],
+                                    child: coLimit(size)),
+
+                                // CO && MARKET
+                                Visibility(
                                     visible:
-                                        futProductBtn[1] && priceTypeBtn[3],
-                                    child: cncSlm(size),
-                                  ),
+                                        futProductBtn[2] && priceTypeBtn[1],
+                                    child: coMarket(size)),
 
-                                  // CO && LIMIT
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[2] && priceTypeBtn[0],
-                                      child: coLimit(size)),
+                                // CO && SL
+                                Visibility(
+                                    visible:
+                                        futProductBtn[2] && priceTypeBtn[2],
+                                    child: coSl(size)),
 
-                                  // CO && MARKET
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[2] && priceTypeBtn[1],
-                                      child: coMarket(size)),
+                                // BO && LIMIT
+                                Visibility(
+                                    visible:
+                                        futProductBtn[3] && priceTypeBtn[0],
+                                    child: boLimit(size)),
 
-                                  // CO && SL
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[2] && priceTypeBtn[2],
-                                      child: coSl(size)),
+                                // BO && MARKET
+                                Visibility(
+                                    visible:
+                                        futProductBtn[3] && priceTypeBtn[1],
+                                    child: boMarket(size)),
 
-                                  // BO && LIMIT
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[3] && priceTypeBtn[0],
-                                      child: boLimit(size)),
-
-                                  // BO && MARKET
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[3] && priceTypeBtn[1],
-                                      child: boMarket(size)),
-
-                                  //BO && SL
-                                  Visibility(
-                                      visible:
-                                          futProductBtn[3] && priceTypeBtn[2],
-                                      child: boSl(size)),
-                                ],
-                              ),
-                        sizedHeight(size * .3),
-                        const Divider(),
-                        sizedHeight(size * .1),
-                        Card(
-                            elevation: 3,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            buildContentText("Quantity", size),
-                                            buildContentText("Lot:1", size)
-                                          ],
-                                        ),
-                                        const SizedBox(
-                                          height: 6,
-                                        ),
-                                        SizedBox(
-                                            height: 42,
-                                            child: TextField(
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              controller: qTy,
-                                              decoration: const InputDecoration(
-                                                  border: OutlineInputBorder()),
-                                            )),
-                                        const SizedBox(
-                                          height: 8,
-                                        ),
-                                        buildContentText(
-                                            "Freeze Qty:0987", size)
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 42,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            buildContentText("Price", size),
-                                            buildContentText("Tick:1", size)
-                                          ],
-                                        ),
-                                        const SizedBox(
-                                          height: 6,
-                                        ),
-                                        priceTypeBtn[1] || priceTypeBtn[3]
-                                            ? Container(
-                                                height: 42,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey[300],
-                                                    borderRadius:
-                                                        const BorderRadius.all(
-                                                            Radius.circular(
-                                                                4))),
-                                                child: const Center(
-                                                    child: Text("0.0")),
-                                              )
-                                            : SizedBox(
-                                                height: 42,
-                                                child: TextField(
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  controller: price,
-                                                  decoration: const InputDecoration(
-                                                      border:
-                                                          OutlineInputBorder()),
-                                                )),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )),
-                        const SizedBox(
-                          height: 14,
-                        ),
-                        Container(
-                          color: Colors.lightGreen[50],
+                                //BO && SL
+                                Visibility(
+                                    visible:
+                                        futProductBtn[3] && priceTypeBtn[2],
+                                    child: boSl(size)),
+                              ],
+                            ),
+                      sizedHeight(size * .3),
+                      const Divider(),
+                      sizedHeight(size * .1),
+                      Card(
+                          elevation: 3,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Cash: \$0.00",
-                                    style: logText(size, Colors.brown)),
-                                Text("Margin: \$200.00",
-                                    style: logText(size, Colors.brown))
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          buildContentText("Quantity", size),
+                                          buildContentText(
+                                              "Lot: ${ScriptInfoModel.lotSize}",
+                                              size)
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 6,
+                                      ),
+                                      SizedBox(
+                                          height: 42,
+                                          child: TextFormField(
+                                            initialValue:
+                                                "${ScriptInfoModel.lotSize}",
+                                            onTap: () {
+                                              setState(() {
+                                                activeTxtField = true;
+                                              });
+                                            },
+                                            onChanged: (value) {
+                                              setState(() {
+                                                quantity = int.parse(value);
+                                              });
+                                            },
+                                            keyboardType: TextInputType.number,
+                                            // controller: qTy,
+                                            decoration: const InputDecoration(
+                                                border: OutlineInputBorder()),
+                                          )),
+                                      const SizedBox(
+                                        height: 8,
+                                      ),
+                                      buildContentText(
+                                          "Freeze Qty: ${ScriptInfoModel.frzQty}",
+                                          size)
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 42,
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          buildContentText("Price", size),
+                                          buildContentText(
+                                              "Tick: ${ScriptInfoModel.tikTik}",
+                                              size)
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 6,
+                                      ),
+                                      priceTypeBtn[1] || priceTypeBtn[3]
+                                          ? disabledTextField()
+                                          : SizedBox(
+                                              height: 42,
+                                              child: TextFormField(
+                                                initialValue:
+                                                    lastPrice.toString(),
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    changePrice =
+                                                        double.parse(value);
+                                                  });
+                                                },
+                                                onTap: () {
+                                                  setState(() {
+                                                    activeTxtField = true;
+                                                  });
+                                                },
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                // controller: price,
+                                                decoration: const InputDecoration(
+                                                    border:
+                                                        OutlineInputBorder()),
+                                              )),
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
+                          )),
+                      const SizedBox(
+                        height: 14,
+                      ),
+                      Container(
+                        color: Colors.lightGreen[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Cash: \$0.00",
+                                  style: logText(size, Colors.brown)),
+                              Text("Margin: \$200.00",
+                                  style: logText(size, Colors.brown))
+                            ],
                           ),
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                    ],
                   ),
-                  Center(
-                    child: SizedBox(
-                      width: 200,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue),
-                          onPressed: () {},
-                          icon: const Icon(Icons.point_of_sale_outlined),
-                          label: Text(
-                            "BUY",
-                            style: listTitle(size),
-                          )),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Visibility(
+                        visible: activeTxtField,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    // var tick = double.parse(
+                                    //     "${ScriptInfoModel.scriptInfoRes['ti']}");
+                                    // // price.text = lastPrice +
+                                    // //     "${ScriptInfoModel.scriptInfoRes['ti']}";
+
+                                    // ltp = ltp + tick;
+                                    // log("$ltp");
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                )),
+                            IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                ))
+                          ],
+                        )),
+                    Center(
+                      child: SizedBox(
+                        height: 50,
+                        width: 200,
+                        child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue),
+                            onPressed: () {
+                              log("$product");
+                              placeOrder(
+                                  exch,
+                                  scriptName,
+                                  quantity,
+                                  changePrice,
+                                  product,
+                                  priceTyp,
+                                  diskQty,
+                                  triggerPrice);
+                            },
+                            icon: const Icon(Icons.shopping_cart_outlined),
+                            label: Text(
+                              "BUY",
+                              style: listTitle(size),
+                            )),
+                      ),
                     ),
-                  )
-                ],
-              ),
+                  ],
+                )
+              ],
             ),
           ),
         ),
@@ -573,6 +641,7 @@ class _BuyOrderState extends State<BuyOrder> {
   Column coMarket(Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         buildContentText("Stoploss", size),
         sizedHeight(size * .1),
@@ -615,8 +684,21 @@ class _BuyOrderState extends State<BuyOrder> {
         sizedHeight(size * .1),
         buildContentText("Disc Qty", size),
         sizedHeight(size * .1),
-        discQtyTextField(size),
+        ScriptInfoModel.segment == "EQT"
+            ? discQtyTextField(size)
+            : disabledTextField(),
       ],
+    );
+  }
+
+  Container disabledTextField() {
+    return Container(
+      height: 42,
+      width: 150,
+      decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: const BorderRadius.all(Radius.circular(4))),
+      child: const Center(child: Text("0.0")),
     );
   }
 
@@ -643,7 +725,9 @@ class _BuyOrderState extends State<BuyOrder> {
         sizedHeight(size * .1),
         buildContentText("Disc Qty", size),
         sizedHeight(size * .1),
-        discQtyTextField(size),
+        ScriptInfoModel.segment == "EQT"
+            ? discQtyTextField(size)
+            : disabledTextField(),
       ],
     );
   }
@@ -668,7 +752,9 @@ class _BuyOrderState extends State<BuyOrder> {
         sizedHeight(size * .1),
         buildContentText("Disc Qty", size),
         sizedHeight(size * .1),
-        discQtyTextField(size),
+        ScriptInfoModel.segment == "EQT"
+            ? discQtyTextField(size)
+            : disabledTextField(),
       ],
     );
   }
@@ -710,7 +796,9 @@ class _BuyOrderState extends State<BuyOrder> {
         sizedHeight(size * .1),
         buildContentText("Disc Qty", size),
         sizedHeight(size * .1),
-        discQtyTextField(size),
+        ScriptInfoModel.segment == "EQT"
+            ? discQtyTextField(size)
+            : disabledTextField(),
       ],
     );
   }
@@ -721,10 +809,17 @@ class _BuyOrderState extends State<BuyOrder> {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
-          controller: target,
+        child: TextFormField(
+          initialValue: "0.00",
+          onChanged: (value) {
+            setState(() {
+              target = double.parse(value);
+            });
+          },
+          onTap: () => inActiveTxtField(),
+          // controller: target,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
         ));
@@ -734,9 +829,16 @@ class _BuyOrderState extends State<BuyOrder> {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
+        child: TextFormField(
+          initialValue: "0.00",
+          onChanged: (value) {
+            setState(() {
+              trailingStoploss = double.parse(value);
+            });
+          },
+          onTap: () => inActiveTxtField(),
           keyboardType: TextInputType.number,
-          controller: trailingStoploss,
+          // controller: trailingStoploss,
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ));
   }
@@ -745,9 +847,16 @@ class _BuyOrderState extends State<BuyOrder> {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
+        child: TextFormField(
+          initialValue: "0.00",
+          onChanged: ((value) {
+            setState(() {
+              triggerPrice = double.parse(value);
+            });
+          }),
+          onTap: () => inActiveTxtField(),
           keyboardType: TextInputType.number,
-          controller: triggerPrice,
+          // controller: triggerPrice,
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ));
   }
@@ -756,9 +865,16 @@ class _BuyOrderState extends State<BuyOrder> {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
+        child: TextFormField(
+          initialValue: '5',
+          onChanged: (value) {
+            setState(() {
+              mktProt = int.parse(value);
+            });
+          },
+          onTap: () => inActiveTxtField(),
           keyboardType: TextInputType.number,
-          controller: mktProt,
+          // controller: mktProt,
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ));
   }
@@ -767,9 +883,16 @@ class _BuyOrderState extends State<BuyOrder> {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
+        child: TextFormField(
+          onChanged: (value) {
+            setState(() {
+              stopLoss = double.parse(value);
+            });
+          },
+          initialValue: "0.00",
+          onTap: () => inActiveTxtField(),
           keyboardType: TextInputType.number,
-          controller: stopLoss,
+          // controller: stopLoss,
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ));
   }
@@ -780,9 +903,16 @@ class _BuyOrderState extends State<BuyOrder> {
         SizedBox(
             width: 150,
             height: 42,
-            child: TextField(
+            child: TextFormField(
+              initialValue: "0.00",
+              onChanged: ((value) {
+                setState(() {
+                  diskQty = double.parse(value);
+                });
+              }),
+              onTap: () => inActiveTxtField(),
               keyboardType: TextInputType.number,
-              controller: diskQty,
+              // controller: diskQty,
               decoration: const InputDecoration(border: OutlineInputBorder()),
             )),
         const SizedBox(
@@ -802,14 +932,26 @@ class _BuyOrderState extends State<BuyOrder> {
     );
   }
 
+  void inActiveTxtField() {
+    return setState(() {
+      activeTxtField = false;
+    });
+  }
+
   SizedBox triggerTextField() {
     return SizedBox(
         width: 150,
         height: 42,
-        child: TextField(
+        child: TextFormField(
+          onChanged: ((value) {
+            setState(() {
+              trigger = double.parse(value);
+            });
+          }),
+          onTap: () => inActiveTxtField(),
           keyboardType: TextInputType.number,
-          controller: trigger,
-          decoration: InputDecoration(border: OutlineInputBorder()),
+          // controller: trigger,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
         ));
   }
 
@@ -833,17 +975,25 @@ class _BuyOrderState extends State<BuyOrder> {
               eqtProductBtn[3] = false;
               eqtProductBtn[4] = false;
               eqtProductBtn[i] = true;
-              if (eqtProductBtn[3] || eqtProductBtn[4]) {
-                priceType.remove("SLM");
-                // priceTypeBtn[0] = true;
-              } else {
-                priceType.remove("SLM");
-                priceType.add("SLM");
-                // priceTypeBtn[0] = true;
-                // priceTypeBtn[1] = false;
-                // priceTypeBtn[2] = false;
-              }
             });
+            if (eqtProductBtn[0] == true) {
+              product = UserDetailModel.product[5]['prd'];
+              print(product);
+            } else if (eqtProductBtn[1] == true) {
+              product = UserDetailModel.product[4]['prd'];
+              print(product);
+            }
+
+            if (eqtProductBtn[3] || eqtProductBtn[4]) {
+              priceType.remove("SLM");
+              // priceTypeBtn[0] = true;
+            } else {
+              priceType.remove("SLM");
+              priceType.add("SLM");
+              // priceTypeBtn[0] = true;
+              // priceTypeBtn[1] = false;
+              // priceTypeBtn[2] = false;
+            }
           },
           child: Text(
             eqtProduct[i],
@@ -872,6 +1022,14 @@ class _BuyOrderState extends State<BuyOrder> {
               futProductBtn[2] = false;
               futProductBtn[3] = false;
               futProductBtn[i] = true;
+              if (futProductBtn[0]) {
+                product = UserDetailModel.product[3]['prd'];
+                print(product);
+              } else if (futProductBtn[1]) {
+                product = UserDetailModel.product[4]['prd'];
+                print(product);
+              }
+
               if (futProductBtn[2] || futProductBtn[3]) {
                 priceType.remove("SLM");
                 // priceTypeBtn[0] = true;
@@ -910,6 +1068,20 @@ class _BuyOrderState extends State<BuyOrder> {
               priceTypeBtn[2] = false;
               priceTypeBtn[3] = false;
               priceTypeBtn[i] = true;
+
+              if (priceTypeBtn[0]) {
+                priceTyp = UserDetailModel.priceType[0];
+                print(priceTyp);
+              } else if (priceTypeBtn[1]) {
+                priceTyp = UserDetailModel.priceType[1];
+                print(priceTyp);
+              } else if (priceTypeBtn[2]) {
+                priceTyp = UserDetailModel.priceType[2];
+                print(priceTyp);
+              } else if (priceTypeBtn[3]) {
+                priceTyp = UserDetailModel.priceType[3];
+                print(priceTyp);
+              }
             });
           },
           child: Text(priceType[i], style: orderBtnText(size)),
@@ -942,25 +1114,35 @@ class _BuyOrderState extends State<BuyOrder> {
     return listButtons;
   }
 
-  Future scriptInfo(exchange, token) async {
+  Future placeOrder(exchange, scriptName, quantity, price, product, priceTyp,
+      diskQty, triggerPrice) async {
+    print(
+        "placeOrder Values :: $lastPrice :: $changePrice  :  $quantity  :   $diskQty   :  $product  :  $priceTyp : ${scriptName.toString().replaceAll("&", "%26")}");
     try {
-      http.Response response = await http.post(Uri.parse(ApiLinks.secInfo),
+      String symName = scriptName.toString().replaceAll("&", "%26");
+      http.Response response = await http.post(Uri.parse(ApiLinks.placeOrder),
           headers: <String, String>{
             'Content-Type': 'application/json',
           },
           body:
-              '''jData={"uid":"${ConstVariable.userId}","exch":"$exchange","token":"$token"}&jKey=${ConstVariable.sessionId}''');
+              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}","exch":"$exchange","tsym":"$symName","qty":"$quantity","prc":"$price","dscqty":"$diskQty","prd":"$product","trantype":"B","trgprc":"$triggerPrice","prctyp":"$priceTyp","ret":"DAY","ordersource":"MOB"}&jKey=${ConstVariable.sessionId}''');
 
-      setState(() {
-        ScriptInfoModel.scriptInfoRes = json.decode(response.body);
-        var stat = ScriptInfoModel.scriptInfoRes['stat'];
-        if (stat == "Ok") {
-          segment = ScriptInfoModel.scriptInfoRes['seg'];
-        } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(sb.unSuccessBar("Session Expired"));
-        }
-      });
-    } catch (e) {}
+      Map mapRes = json.decode(response.body);
+      log("$mapRes");
+      if (mapRes['stat'] == "Ok") {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.successBar("Order Placed"));
+        setState(() {
+          ConstVariable.bottomIndex = 1;
+        });
+
+        Navigator.pushNamed(context, 'mobIndex');
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(sb.successBar(mapRes['emsg']));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));
+    }
   }
 }
