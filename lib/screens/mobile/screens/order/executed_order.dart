@@ -147,6 +147,27 @@ class _ExecutedOrderState extends State<ExecutedOrder> {
                                       " NRML",
                                       style: listSubTitle(size),
                                     ),
+                                  ] else if (OrderBookModel
+                                          .executedOrderBook[index]['prd'] ==
+                                      "F") ...[
+                                    Text(
+                                      " MTF",
+                                      style: listSubTitle(size),
+                                    ),
+                                  ] else if (OrderBookModel
+                                          .executedOrderBook[index]['prd'] ==
+                                      "B") ...[
+                                    Text(
+                                      " BO",
+                                      style: listSubTitle(size),
+                                    ),
+                                  ] else if (OrderBookModel
+                                          .executedOrderBook[index]['prd'] ==
+                                      "H") ...[
+                                    Text(
+                                      " CO",
+                                      style: listSubTitle(size),
+                                    ),
                                   ]
                                 ],
                               ),
@@ -201,10 +222,14 @@ class _ExecutedOrderState extends State<ExecutedOrder> {
             }
           }
         });
+      } else {
+        var errorMsg = mapRes['emsg'];
+
+        if (errorMsg == "Invalid Input : Password Expired") {
+          Navigator.pushNamed(context, "changePassword");
+          ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(errorMsg));
+        }
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          sb.unSuccessBar("Connection issue, Please Try again later"));
-    }
+    } catch (e) {}
   }
 }

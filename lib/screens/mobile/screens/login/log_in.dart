@@ -32,15 +32,9 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   @override
   void initState() {
-    userName();
     requestPermission();
 
     super.initState();
-  }
-
-  userName() async {
-    final prefs = await SharedPreferences.getInstance();
-    ConstVariable.userId = prefs.getString('userId')!;
   }
 
   Future<void> initPlatformState() async {

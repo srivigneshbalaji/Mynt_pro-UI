@@ -65,7 +65,6 @@ class _WatchListInfoState extends State<WatchListInfo> {
 
       String token = marketDepth.token as String;
       String symbolName = "";
-      String lastPrice = "";
       return WillPopScope(
         onWillPop: () async {
           Map watchlistDepth = {"exch": exchange.toString(), "token": token};
@@ -887,6 +886,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
               int.parse("${ScriptInfoModel.scriptInfoRes['ls']}");
           ScriptInfoModel.frzQty = ScriptInfoModel.scriptInfoRes['frzqty'];
           ScriptInfoModel.tikTik = ScriptInfoModel.scriptInfoRes['ti'];
+          ScriptInfoModel.exchange = ScriptInfoModel.scriptInfoRes['exch'];
         });
       } else {
         ScaffoldMessenger.of(context)

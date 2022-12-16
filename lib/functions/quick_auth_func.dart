@@ -48,6 +48,7 @@ class QuickAuth {
         await prefs.setString('userSession', ConstVariable.sessionId);
         await prefs.setString('userId', ConstVariable.userId);
         await prefs.setString('actid', ConstVariable.accId);
+        ConstVariable.userId = prefs.getString('userId')!;
         ConstVariable.sessionId = prefs.getString('userSession')!;
         ConstVariable.accId = prefs.getString('actid')!;
 
@@ -59,8 +60,10 @@ class QuickAuth {
 
         if (errorMsg == "Invalid Input : Password Expired") {
           Navigator.pushNamed(context, "changePassword");
+          ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(errorMsg));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(errorMsg));
         }
-        ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(errorMsg));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));

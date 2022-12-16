@@ -31,13 +31,6 @@ class _SellOrderState extends State<SellOrder> {
   bool isChecked = false;
 
   bool activeTxtField = false;
-  // final diskQty = TextEditingController(text: "0.00");
-  // final stopLoss = TextEditingController(text: "0.00");
-  // final target = TextEditingController(text: "0.00");
-  // final trailingStoploss = TextEditingController(text: "0.00");
-  // final mktProt = TextEditingController(text: "0.00");
-  // final trigger = TextEditingController(text: "0.00");
-  // final triggerPrice = TextEditingController(text: "0.00");
   List<bool> eqtProductBtn = [true, false, false, false, false];
   List<bool> futProductBtn = [true, false, false, false];
   List<bool> priceTypeBtn = [true, false, false, false];
@@ -45,7 +38,8 @@ class _SellOrderState extends State<SellOrder> {
   List<String> eqtProduct = ["CNC", "MIS", "MTF", "CO", "BO"];
   List<String> futProduct = ["NRML", "MIS", "CO", "BO"];
   List<String> priceType = ["LIMIT", "MARKET", "SL", "SLM"];
-  List<String> validity = ["Day", "IOC"];
+  List<String> validity =
+      ScriptInfoModel.exchange == "MCX" ? ["Day", "GTT"] : ["Day", "IOC"];
   String exch;
   String scriptName;
   String tok;
@@ -59,6 +53,8 @@ class _SellOrderState extends State<SellOrder> {
   double triggerPrice = 0.00;
   int mktProt = 0;
   double stopLoss = 0.00;
+  String validityType = "DAY";
+  String amo = "No";
   _SellOrderState(this.exch, this.scriptName, this.tok, this.lastPrice);
   String product = ScriptInfoModel.segment == "EQT"
       ? "${UserDetailModel.product[5]['prd']}"
@@ -67,11 +63,6 @@ class _SellOrderState extends State<SellOrder> {
 
   @override
   Widget build(BuildContext context) {
-    // var ltp = lastPrice;
-    // final qTy =
-    //     TextEditingController(text: "${ScriptInfoModel.scriptInfoRes['ls']}");
-    // final price = TextEditingController(text: "$lastPrice");
-
     var size = MediaQuery.of(context).size;
     return Consumer(builder: (context, ThemeModel themeNotifier, child) {
       return Scaffold(
@@ -479,7 +470,12 @@ class _SellOrderState extends State<SellOrder> {
                                   product,
                                   priceTyp,
                                   diskQty,
-                                  triggerPrice);
+                                  triggerPrice,
+                                  stopLoss,
+                                  target,
+                                  trailingStoploss,
+                                  validityType,
+                                  amo);
                             },
                             icon: const Icon(
                                 Icons.shopping_cart_checkout_outlined),
@@ -923,6 +919,9 @@ class _SellOrderState extends State<SellOrder> {
             onChanged: (check) {
               setState(() {
                 isChecked = check!;
+                if (isChecked) {
+                  amo = "Yes";
+                }
               });
             }),
         buildContentText("AMO", size),
@@ -979,6 +978,15 @@ class _SellOrderState extends State<SellOrder> {
             } else if (eqtProductBtn[1] == true) {
               product = UserDetailModel.product[4]['prd'];
               print(product);
+            } else if (eqtProductBtn[2] == true) {
+              product = UserDetailModel.product[0]['prd'];
+              print(product);
+            } else if (eqtProductBtn[3] == true) {
+              product = UserDetailModel.product[2]['prd'];
+              print(product);
+            } else if (eqtProductBtn[4] == true) {
+              product = UserDetailModel.product[1]['prd'];
+              print(product);
             }
 
             if (eqtProductBtn[3] || eqtProductBtn[4]) {
@@ -1023,6 +1031,12 @@ class _SellOrderState extends State<SellOrder> {
                 print(product);
               } else if (futProductBtn[1]) {
                 product = UserDetailModel.product[4]['prd'];
+                print(product);
+              } else if (futProductBtn[2] == true) {
+                product = UserDetailModel.product[2]['prd'];
+                print(product);
+              } else if (futProductBtn[3] == true) {
+                product = UserDetailModel.product[1]['prd'];
                 print(product);
               }
 
@@ -1101,6 +1115,13 @@ class _SellOrderState extends State<SellOrder> {
               validityBtn[0] = false;
               validityBtn[1] = false;
               validityBtn[i] = true;
+              if (validityBtn[0]) {
+                validityType = validity[0];
+                print("AAA $validityType");
+              } else {
+                validityType = validity[1];
+                print("AAA $validityType");
+              }
             });
           },
           child: Text(validity[i], style: orderBtnText(size)),
@@ -1110,10 +1131,22 @@ class _SellOrderState extends State<SellOrder> {
     return listButtons;
   }
 
-  Future placeOrder(exchange, scriptName, quantity, price, product, priceTyp,
-      diskQty, triggerPrice) async {
+  Future placeOrder(
+      exchange,
+      scriptName,
+      quantity,
+      price,
+      product,
+      priceTyp,
+      diskQty,
+      triggerPrice,
+      stopLoss,
+      target,
+      trailingStoploss,
+      validityType,
+      amo) async {
     print(
-        "placeOrder Values :: $lastPrice :: $changePrice  :  $quantity  :   $diskQty   :  $product  :  $priceTyp : ${scriptName.toString().replaceAll("&", "%26")}");
+        "placeOrder Values :: $lastPrice :: $changePrice  :  $quantity  :   $diskQty   :  $product  :  $priceTyp : ${scriptName.toString().replaceAll("&", "%26")} : $validityType");
     try {
       String symName = scriptName.toString().replaceAll("&", "%26");
       http.Response response = await http.post(Uri.parse(ApiLinks.placeOrder),
@@ -1121,7 +1154,7 @@ class _SellOrderState extends State<SellOrder> {
             'Content-Type': 'application/json',
           },
           body:
-              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}","exch":"$exchange","tsym":"$symName","qty":"$quantity","prc":"$price","dscqty":"$diskQty","prd":"$product","trantype":"S","trgprc":"$triggerPrice","prctyp":"$priceTyp","ret":"DAY","ordersource":"MOB"}&jKey=${ConstVariable.sessionId}''');
+              '''jData={"uid":"${ConstVariable.userId}","actid":"${ConstVariable.accId}","exch":"$exchange","tsym":"$symName","qty":"$quantity","prc":"$price","dscqty":"$diskQty","prd":"$product","trantype":"B","trgprc":"$triggerPrice","prctyp":"$priceTyp","bpprc":"$target","trailprc":"$trailingStoploss","ret":"$validityType","amo":"$amo","blprc":"$stopLoss","ordersource":"MOB"}&jKey=${ConstVariable.sessionId}''');
 
       Map mapRes = json.decode(response.body);
       log("$mapRes");
