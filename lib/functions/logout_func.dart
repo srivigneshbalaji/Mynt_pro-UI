@@ -28,10 +28,11 @@ Future logout({
     if (ConstVariable.stat == "Ok") {
       ScaffoldMessenger.of(context)
           .showSnackBar(sb.successBar("User succesfully logged out"));
-
+      ConstVariable.userId = prefs.getString('userId')!;
       await prefs.remove('userSession');
 
-      Navigator.pushNamed(context, 'logIn');
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('logIn', (Route<dynamic> route) => false);
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(sb.unSuccessBar(e.toString()));

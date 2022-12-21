@@ -29,21 +29,20 @@ class _AccProfileState extends State<AccProfile> {
       children: [
         sizedHeight(size),
         Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  ClientDetailModel.clientName,
-                  style: listTitle2(size),
-                ),
-                Text(
-                  ClientDetailModel.accId,
-                  style: listSubTitle(size),
-                )
-              ],
+          child: ListTile(
+            title: Text(
+              ClientDetailModel.clientName,
+              style: listTitle2(size),
+            ),
+            subtitle: Text(
+              ClientDetailModel.accId,
+              style: listSubTitle(size),
+            ),
+            trailing: CircleAvatar(
+              child: Text(
+                ClientDetailModel.clientName[0],
+                style: listTitle2(size),
+              ),
             ),
           ),
         ),
@@ -212,23 +211,12 @@ class _AccProfileState extends State<AccProfile> {
         Card(
           child: ListTile(
             title: Text(
-              "Change 2FA",
+              "Funds",
               style: listTitle(size),
             ),
             trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {},
-          ),
-        ),
-        sizedHeight(size),
-        Card(
-          child: ListTile(
-            title: Text(
-              "Logout",
-              style: listTitle(size),
-            ),
-            trailing: const Icon(Icons.logout),
             onTap: () {
-              logout(context: context);
+              Navigator.pushNamed(context, "fund");
             },
           ),
         ),
@@ -249,7 +237,20 @@ class _AccProfileState extends State<AccProfile> {
             } catch (e) {}
           },
           secondary: const Icon(Icons.fingerprint),
-        )
+        ),
+        sizedHeight(size),
+        Card(
+          child: ListTile(
+            title: Text(
+              "Logout",
+              style: listTitle(size),
+            ),
+            trailing: const Icon(Icons.logout),
+            onTap: () {
+              logout(context: context);
+            },
+          ),
+        ),
       ],
     );
   }

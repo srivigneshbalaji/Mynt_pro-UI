@@ -7,4 +7,5 @@ class ScriptInfoModel {
   static String frzQty = "";
   static String tikTik = "";
   static int lotSize = 0;
+  static double price = 0.0;
 }

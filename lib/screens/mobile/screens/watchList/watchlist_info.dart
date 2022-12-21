@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -59,7 +60,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
     var size = MediaQuery.of(context).size;
     return Consumer(builder: (context, ThemeModel themeNotifier, child) {
       var buyPrice;
-      double price = 0;
+      // double price = 0;
       var che;
       var pChange;
 
@@ -114,7 +115,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
                                     scriptName: scriptName,
                                     exch: exchange,
                                     tok: token,
-                                    lastPrice: price,
+                                    lastPrice: ScriptInfoModel.price,
                                   )));
                         },
                       )),
@@ -131,7 +132,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
                                     scriptName: scriptName,
                                     exch: exchange,
                                     tok: token,
-                                    lastPrice: price,
+                                    lastPrice: ScriptInfoModel.price,
                                   )));
                         },
                       ))
@@ -379,7 +380,7 @@ class _WatchListInfoState extends State<WatchListInfo> {
                                   snapshotAcknowledgement.data!.lp! == 'null'
                               ? marketDepth.ltp
                               : snapshotAcknowledgement.data!.lp!;
-                      price = double.parse(marketDepth.ltp!);
+                      ScriptInfoModel.price = double.parse(marketDepth.ltp!);
                       marketDepth.perChange =
                           snapshotAcknowledgement.data!.pc == null ||
                                   snapshotAcknowledgement.data!.pc! == 'null'
@@ -410,7 +411,8 @@ class _WatchListInfoState extends State<WatchListInfo> {
                                   snapshot.data!.lp! == '0'
                               ? marketDepth.ltp
                               : snapshot.data!.lp!;
-                          price = double.parse(marketDepth.ltp!);
+                          ScriptInfoModel.price =
+                              double.parse(marketDepth.ltp!);
                           marketDepth.perChange = snapshot.data!.pc == null ||
                                   snapshot.data!.pc! == '0'
                               ? marketDepth.perChange

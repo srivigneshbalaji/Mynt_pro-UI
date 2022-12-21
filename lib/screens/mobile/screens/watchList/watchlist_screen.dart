@@ -96,7 +96,7 @@ class _WatchlistScreenState extends State<WatchlistScreen>
     return WillPopScope(
       onWillPop: () async {
         Navigator.pop(context);
-        return true;
+        return false;
       },
       child: Consumer(builder: (context, ThemeModel themeNotifier, child) {
         return Scaffold(

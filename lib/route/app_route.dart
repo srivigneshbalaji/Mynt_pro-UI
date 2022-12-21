@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../screens/mobile/mobile_index.dart';
+import '../screens/mobile/screens/account/funds_screens.dart';
 import '../screens/mobile/screens/login/logins.dart';
 import '../screens/mobile/screens/screens.dart';
 import '../splash/splash_screen.dart';
@@ -14,8 +15,8 @@ class AppRouter {
         return MobileIndex.route();
       case WatchlistScreen.routeName:
         return WatchlistScreen.route();
-      // case SearchScreen.routeName:
-      //   return SearchScreen.route();
+      case FundScreen.routeName:
+        return FundScreen.route();
       case LogIn.routeName:
         return LogIn.route();
       case ForgotPassword.routeName:

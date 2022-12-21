@@ -53,7 +53,9 @@ class QuickAuth {
         ConstVariable.accId = prefs.getString('actid')!;
 
         // marketWatchList(context: context, selectedIndex: 1);
-        Navigator.pushNamed(context, 'mobIndex');
+        // Navigator.pushNamed(context, 'mobIndex');
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            'mobIndex', (Route<dynamic> route) => true);
         ScaffoldMessenger.of(context).showSnackBar(sb.successBar("Success"));
       } else {
         var errorMsg = mapRes['emsg'];
