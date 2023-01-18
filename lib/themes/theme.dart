@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class MyThemes {
   static final darkTheme = ThemeData(
+    fontFamily: 'Rajdhani',
     primaryColor: Colors.white,
     primarySwatch: Colors.blue,
     colorScheme: const ColorScheme.dark()
@@ -29,6 +30,7 @@ class MyThemes {
   );
 
   static final lightTheme = ThemeData(
+    fontFamily: 'Rajdhani',
     primaryColor: Colors.black,
     primarySwatch: Colors.blue,
     appBarTheme: const AppBarTheme(

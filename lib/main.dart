@@ -34,6 +34,7 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: 'MYNT',
           theme:
+              // ThemeData(fontFamily: 'Rajdhani'),
               themeNotifier.isDark ? MyThemes.darkTheme : MyThemes.lightTheme,
           onGenerateRoute: AppRouter.router,
           initialRoute: SplashScreen.routeName,
